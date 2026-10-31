@@ -19,14 +19,18 @@ from pydantic import BaseModel, Field, field_validator
 from rag.config import Settings
 from rag.llm import llm_client
 from rag.retrieve import Hit, retrieve
+from rag.rpg import citation
 from rag.structured import complete_structured
 
-SYSTEM_PROMPT = """Jesteś asystentem odpowiadającym na pytania WYŁĄCZNIE na podstawie podanego kontekstu.
+SYSTEM_PROMPT = """Jesteś asystentem Mistrza Gry i graczy. Odpowiadasz WYŁĄCZNIE na podstawie
+podanego kontekstu z podręczników RPG.
 Zasady:
-- Odpowiadaj po polsku, zwięźle i konkretnie.
-- Przy KAŻDYM twierdzeniu wstaw w tekście numer fragmentu w nawiasach kwadratowych, np. „... 8192 tokeny [2].”
+- Odpowiadaj po polsku, zwięźle i konkretnie. Podawaj konkretne liczby, kości, progi i nazwy.
+- Przy KAŻDYM twierdzeniu wstaw w tekście numer fragmentu w nawiasach kwadratowych, np. „... 8k6 [2].”
 - W polu citations podaj listę liczb – numery wszystkich użytych fragmentów, np. [2, 3].
-- Jeśli kontekst nie zawiera odpowiedzi, napisz wprost, że w dokumentach nie ma tej informacji,
+- Rozróżniaj zasady (rules) od opisu świata (lore). Nie wymyślaj zasad, których nie ma w kontekście.
+- Gdy kontekst zawiera kilka systemów, nie mieszaj ich: powiedz, którego dotyczy odpowiedź.
+- Jeśli kontekst nie zawiera odpowiedzi, napisz wprost, że w podręcznikach nie ma tej informacji,
   i zostaw pustą listę citations. Nie zgaduj.
 """
 
@@ -63,6 +67,20 @@ class Answer(BaseModel):
 def inline_markers(text: str) -> list[int]:
     """Numery ze znaczników [n] w tekście odpowiedzi (w kolejności, bez powtórzeń)."""
     return list(dict.fromkeys(int(n) for n in _MARKER.findall(text)))
+
+
+def render_answer(result: RagResult) -> str:
+    """Zamienia [n] na czytelne cytowanie („[PHB, s. 82]”) dopiero do wyświetlenia."""
+
+    def repl(match: re.Match[str]) -> str:
+        number = int(match.group(1))
+        if 1 <= number <= len(result.hits):
+            short = citation(result.hits[number - 1].metadata)
+            if short:
+                return f"[{short}]"
+        return match.group(0)
+
+    return _MARKER.sub(repl, result.answer.answer)
 
 
 def _words(text: str) -> set[str]:
@@ -133,11 +151,15 @@ def build_messages(question: str, hits: list[Hit]) -> list[dict[str, str]]:
 
 
 def answer_question(
-    question: str, settings: Settings, k: int | None = None, collection: str | None = None
+    question: str,
+    settings: Settings,
+    k: int | None = None,
+    collection: str | None = None,
+    filters: dict[str, Any] | None = None,
 ) -> RagResult:
     """Retrieval top-k + generacja odpowiedzi ze structured output."""
     t0 = time.perf_counter()
-    hits = retrieve(question, settings, k=k, collection=collection)
+    hits = retrieve(question, settings, k=k, collection=collection, filters=filters)
     t1 = time.perf_counter()
     answer, mode = complete_structured(
         llm_client(settings), settings, build_messages(question, hits), Answer

@@ -1,4 +1,4 @@
-from rag.normalize import basic_clean, join_split_words, word_counts
+from rag.normalize import basic_clean, join_split_words, repair_missing_ligatures, word_counts
 
 
 def normalize(text: str) -> str:
@@ -8,7 +8,25 @@ def normalize(text: str) -> str:
 
 
 def test_basic_clean_ligatures_hyphenation_whitespace():
-    assert basic_clean("ﬁzyka  i kształ-\ncenie") == "fizyka i kształcenie"
+    assert basic_clean("ﬁzyka  i kształ-\ncenie") == "fizyka i kształcenie"
+
+
+def test_basic_clean_repairs_missing_ligatures_from_sw5e():
+    assert basic_clean("Pro\x00ciency modi\x00es e\x00ects.") == "Proficiency modifies effects."
+
+
+def test_repair_missing_ligatures_picks_fi_fl_ff():
+    assert repair_missing_ligatures("\x00rst \x00ight o\x00er") == "first flight offer"
+    assert repair_missing_ligatures("di\x00cult a\x00nity") == "difficult affinity"
+    assert repair_missing_ligatures("battle\x00eld") == "battlefield"
+    assert repair_missing_ligatures("o\x00cial") == "official"
+    assert repair_missing_ligatures("indi\x00erent coe\x00cient") == "indifferent coefficient"
+    assert repair_missing_ligatures("speci\x00es ri\x00es") == "specifies rifles"
+    assert repair_missing_ligatures("companysu\x00ered") == "companysuffered"
+    assert repair_missing_ligatures("communicationso\x00cer") == "communicationsofficer"
+    assert (
+        repair_missing_ligatures("mblu\x00ng gader\x00i ki\x00ar") == "mbluffing gaderffii kiffar"
+    )
 
 
 def test_join_when_joined_form_exists_in_corpus():

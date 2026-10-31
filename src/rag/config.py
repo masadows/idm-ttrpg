@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 STRUCTURED_OUTPUT_MODES = ("auto", "native", "tool", "prompt")
-CHUNKING_STRATEGIES = ("fixed", "recursive")
+CHUNKING_STRATEGIES = ("fixed", "recursive", "structure")
 
 
 def _env(name: str, default: str) -> str:
@@ -77,6 +77,17 @@ class Settings:
         return host in ("localhost", "127.0.0.1")
 
 
+def parse_filters(text: str) -> dict[str, str]:
+    """„system=D&D 5e,role=gm” → {"system": "D&D 5e", "role": "gm"}."""
+    filters: dict[str, str] = {}
+    for part in filter(None, (p.strip() for p in text.split(","))):
+        key, sep, value = part.partition("=")
+        if not sep:
+            raise ValueError(f"Filtr {part!r} musi mieć postać pole=wartość")
+        filters[key.strip()] = value.strip()
+    return filters
+
+
 def load_settings(env_file: str | None = ".env") -> Settings:
     """Wczytuje `.env` (jeśli istnieje) i buduje obiekt `Settings`.
 
@@ -99,13 +110,14 @@ def load_settings(env_file: str | None = ".env") -> Settings:
         embed_model=_env("EMBED_MODEL", "qwen3-embedding:0.6b"),
         embed_query_instruction=os.getenv(
             "EMBED_QUERY_INSTRUCTION",
-            "Given a question, retrieve passages from the documents that answer it",
+            "Given a question about tabletop role-playing game rules, "
+            "retrieve passages from the rulebooks that answer it",
         ),
-        data_dir=_env("DATA_DIR", "data"),
+        data_dir=_env("DATA_DIR", "data/raw"),
         qdrant_url=_env("QDRANT_URL", "http://localhost:6333"),
-        collection=_env("COLLECTION", "docs"),
+        collection=_env("COLLECTION", "rpg_structure"),
         top_k=int(_env("TOP_K", "5")),
-        chunking=_env("CHUNKING", "recursive"),
+        chunking=_env("CHUNKING", "structure"),
         chunk_size=int(_env("CHUNK_SIZE", "800")),
         chunk_overlap=int(_env("CHUNK_OVERLAP", "120")),
         structured_output=_env("STRUCTURED_OUTPUT", "auto"),

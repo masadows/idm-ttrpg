@@ -19,16 +19,18 @@ from rag.config import Settings
 from rag.llm import chat_kwargs, llm_client
 from rag.retrieve import retrieve
 
-SYSTEM_PROMPT = """Jesteś asystentem, który odpowiada na pytania o dokumenty z bazy wiedzy.
+SYSTEM_PROMPT = """Jesteś asystentem Mistrza Gry. Odpowiadasz na pytania o zasady i świat
+na podstawie podręczników RPG.
 Zanim odpowiesz, użyj narzędzia search_docs (możesz kilka razy, z różnymi zapytaniami).
 Odpowiadaj po polsku, tylko na podstawie wyników wyszukiwania, i podawaj źródła w nawiasach,
-np. (rag_wprowadzenie.md › Czym jest RAG). Jeśli wyniki nie zawierają odpowiedzi, powiedz to wprost."""
+np. (PHB › Chapter 11: Spells › Fireball, s. 82). Rozróżniaj systemy i nie mieszaj ich zasad.
+Jeśli wyniki nie zawierają odpowiedzi, powiedz to wprost."""
 
 SEARCH_DOCS_TOOL: dict[str, Any] = {
     "type": "function",
     "function": {
         "name": "search_docs",
-        "description": "Przeszukuje bazę dokumentów i zwraca najbardziej pasujące fragmenty.",
+        "description": "Przeszukuje podręczniki RPG i zwraca najbardziej pasujące fragmenty.",
         "parameters": {
             "type": "object",
             "properties": {

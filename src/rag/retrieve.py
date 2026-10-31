@@ -29,13 +29,15 @@ class Hit:
         return list(self.metadata.get("source_ids", []))
 
     def label(self) -> str:
-        """Czytelna etykieta źródła, np. `regulamin.pdf, s. 3` albo `notatki.md › Chunking`."""
+        """Czytelna etykieta źródła, np. `PHB › Chapter 11: Spells › Fireball, s. 82`."""
         m = self.metadata
-        label = str(m.get("source", "?"))
-        if m.get("page"):
-            label += f", s. {m['page']}"
-        if m.get("section"):
-            label += f" › {m['section']}"
+        label = str(m.get("doc_label") or m.get("source") or "?")
+        for key in ("chapter", "section", "entry"):
+            if m.get(key):
+                label += f" › {m[key]}"
+        page = m.get("page_label") or m.get("page")
+        if page:
+            label += f", s. {page}"
         return label
 
 
@@ -90,8 +92,8 @@ def build_filter(filters: dict[str, Any] | None) -> models.Filter | None:
     - zakresy (np. strony, daty) → `models.FieldCondition(key=..., range=models.Range(gte=...))`;
     - flaga `--filter pole=wartość` w `cli.py` (komenda `ask`) przekazywana do `retrieve()`;
     - indeks payloadu dla nowych pól w `store.ensure_collection` (szybsze filtrowanie).
-    Jak sprawdzić: `make ask Q="..." ARGS="--filter source=rag_wprowadzenie.md"` – wszystkie
-    źródła w odpowiedzi muszą pochodzić z wybranego pliku.
+    Jak sprawdzić: `make ask Q="..." ARGS="--filter system=D&D 5e"` – wszystkie źródła
+    w odpowiedzi muszą pochodzić z wybranego systemu.
     """
     if not filters:
         return None

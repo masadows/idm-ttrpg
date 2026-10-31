@@ -1,26 +1,27 @@
-# idm-rag-starter
+# idm-ttrpg – RAG dla podręczników RPG
 
-Starter repo do projektów z kursu **Inżynieria dużych modeli językowych** (WEiTI PW).
-Minimalny, czytelny pipeline RAG, który uruchomisz lokalnie na laptopie:
+Szablon projektu z kursu **Inżynieria dużych modeli językowych** (WEiTI PW) dostosowany do **podręczników gier fabularnych (TTRPG)**.
+Minimalny, czytelny pipeline RAG dla Mistrza Gry i graczy, który uruchomisz lokalnie na laptopie:
 
 ```
- ingest (offline)                                        query (online)
- ─────────────────                                       ───────────────
- PDF/MD/TXT → normalizacja → chunking → embedding ─┐     pytanie → embedding → retrieval top-k
-                                                   ▼                                  │
-                                              Qdrant (wektory + metadane) ◄───────────┘
-                                                                                      ▼
-                                       odpowiedź z cytowaniem źródeł ◄── LLM (structured output)
+ ingest (offline)                                          query (online)
+ ─────────────────                                         ───────────────
+ PDF/MD/TXT → normalizacja (ligatury) → chunking RPG ─┐    pytanie (+ filtr systemu) → embedding → retrieval top-k
+   (outline/TOC → rozdziały/sekcje + zaklęcia/potwory) ▼                                             │
+                                             Qdrant (wektory + metadane RPG) ◄───────────────────────┘
+                                                                                                     ▼
+                                       odpowiedź MG z cytowaniem (np. PHB, s. 90) ◄── LLM (structured output)
 ```
 
-- LLM i embeddingi przez SDK `openai` z `base_url` z `.env` – lokalna **Ollama** albo
-  **Gemini API** (zmiana tylko w `.env`). Bez LangChaina/LlamaIndexa: cały przepływ jest
-  w kilkunastu krótkich modułach w `src/rag/`.
-- Wektory w **Qdrancie** (Docker) albo w trybie lokalnym bez Dockera.
-- Agent z tool callingiem (pętla agenta napisana jawnie), ewaluacja retrievalu (recall@k, MRR),
-  smoke test środowiska (`make check`).
-- Miejsca **TODO** na kolejne techniki: hybrid search (BM25), reranking, metadata filtering,
-  query rewriting – z opisem, co i jak zrobić.
+- **Cztery podręczniki RPG** w `data/raw/` (poza gitem, opisane w `data/raw/manifest.json` z sumami SHA-256):
+  - **D&D 5e Player's Basic Rules** (`PHB`) – zasady gracza i 151 zaklęć,
+  - **D&D 5e DM's Basic Rules** (`DMG`) – zasady prowadzenia i 205 stat blocków potworów,
+  - **Mythras 2E** (`Mythras`) – mechanika d100, walka i magia (z korektą przesunięcia numeracji stron),
+  - **Star Wars 5e Player's Handbook** (`SW5e`) – konwersja 5e ze spisem treści parsowanym ze stron 3–4, naprawą uszkodzonych ligatur `U+0000` i 385 mocami Mocy/Technologii.
+- **Chunking strukturalny (`src/rag/rpg.py`)** – buduje hierarchię rozdziałów i sekcji z zakładek PDF (`outline`) lub tekstu spisu treści (`TABLE OF CONTENTS`), wycina żywą paginę i wykrywa pojedyncze wpisy: zaklęcia (`spell`), moce (`power`) oraz stat blocki potworów (`monster`).
+- **Identyfikatory niezależne od strategii chunkingu (`source_ids`)** – np. `PlayerDnDBasicRules.pdf#chapter-11-spells/fireball`, co pozwala uczciwie porównać chunking strukturalny (`structure`) z podziałem na stałe okna (`fixed`/`recursive`) na poziomie wpisu (`--level source`) oraz sekcji (`--level section`).
+- LLM i embeddingi przez SDK `openai` z `base_url` z `.env` – lokalna **Ollama** albo **Gemini API** (zmiana tylko w `.env`). Bez LangChaina/LlamaIndexa.
+- Wektory i indeksy payloadu (`system`, `role`, `content_type`, `chapter`, `section`, `entry`) w **Qdrancie**.
 
 ## Spis treści
 
@@ -28,13 +29,14 @@ Minimalny, czytelny pipeline RAG, który uruchomisz lokalnie na laptopie:
 2. [Instalacja](#instalacja)
 3. [Okno kontekstu Ollamy – koniecznie przeczytaj](#okno-kontekstu-ollamy--koniecznie-przeczytaj)
 4. [Szybki start](#szybki-start)
-5. [Konfiguracja (.env)](#konfiguracja-env)
-6. [Structured output: trzy tryby](#structured-output-trzy-tryby)
-7. [Słabszy laptop: Gemini API](#słabszy-laptop-gemini-api)
-8. [Ewaluacja](#ewaluacja)
-9. [Co dalej (TODO)](#co-dalej-todo)
-10. [Struktura repozytorium](#struktura-repozytorium)
-11. [Troubleshooting](#troubleshooting)
+5. [Podręczniki RPG i chunking strukturalny](#podręczniki-rpg-i-chunking-strukturalny)
+6. [Konfiguracja (.env)](#konfiguracja-env)
+7. [Structured output: trzy tryby](#structured-output-trzy-tryby)
+8. [Słabszy laptop: Gemini API](#słabszy-laptop-gemini-api)
+9. [Ewaluacja i ręczna ocena odpowiedzi](#ewaluacja-i-ręczna-ocena-odpowiedzi)
+10. [Co dalej (TODO)](#co-dalej-todo)
+11. [Struktura repozytorium](#struktura-repozytorium)
+12. [Troubleshooting](#troubleshooting)
 
 ## Wymagania sprzętowe
 
@@ -72,8 +74,8 @@ więc model działałby kilka-kilkanaście razy wolniej.
 ### Linux
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-curl -fsSL https://ollama.com/install.sh | sh     # instaluje też usługę systemd
+curl -LsSf [https://astral.sh/uv/install.sh](https://astral.sh/uv/install.sh) | sh
+curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh     # instaluje też usługę systemd
 # Docker: pakiet docker.io / docker-ce + plugin compose, użytkownik w grupie docker
 ```
 
@@ -87,6 +89,10 @@ winget install --id=Docker.DockerDesktop -e     # opcjonalnie
 
 `make` na Windowsie zwykle nie jest dostępny – zamiast `make ask Q="..."` wpisz
 `uv run rag ask "..."` (każda komenda w `Makefile` to tylko taki wrapper; `make help` pokazuje listę).
+W PowerShellu przed uruchomieniem ustaw kodowanie UTF-8:
+```powershell
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+```
 
 ### Bez Dockera
 
@@ -99,160 +105,129 @@ Pythona i trzyma dane w katalogu `.qdrant/`. Wystarczy do projektu, ale: tylko j
 **Okno kontekstu** to liczba tokenów, które model widzi naraz (instrukcje, chunki, pytanie,
 odpowiedź). Ollama domyślnie ustawia małe okno (często 2048–4096) i dłuższy prompt **obcina po
 cichu, bez błędu** – model nie widzi części chunków, a Ty szukasz błędu w retrievalu, którego nie ma.
-Pięć chunków po 800 znaków to już ok. 2000 tokenów, dlatego ustawiamy okno jawnie:
+Pięć chunków strukturalnych (do `1.5 × CHUNK_SIZE`) to ok. 2500–3000 tokenów, dlatego ustawiamy okno jawnie:
 
 | System | Jak ustawić (potem zrestartuj Ollamę) |
 |--------|---------------------------------------|
 | macOS (aplikacja) | `launchctl setenv OLLAMA_CONTEXT_LENGTH 16384` |
-| macOS (brew)      | `brew services stop ollama`, potem `OLLAMA_CONTEXT_LENGTH=16384 ollama serve` w osobnym terminalu (albo dopisz zmienną do plist usługi) |
+| macOS (brew)      | `brew services stop ollama`, potem `OLLAMA_CONTEXT_LENGTH=16384 ollama serve` w osobnym terminalu |
 | Linux (systemd)   | `sudo systemctl edit ollama` → `[Service]` `Environment="OLLAMA_CONTEXT_LENGTH=16384"` → `sudo systemctl restart ollama` |
-| Windows           | `setx OLLAMA_CONTEXT_LENGTH 16384`, zamknij Ollamę z zasobnika i uruchom ponownie (`taskkill /F /IM ollama.exe /T``taskkill /F /IM "ollama app.exe" /T`) |
+| Windows           | `setx OLLAMA_CONTEXT_LENGTH 16384`, zamknij Ollamę z zasobnika i uruchom ponownie (`taskkill /F /IM ollama.exe /T`; `taskkill /F /IM "ollama app.exe" /T`) |
 
-Na laptopie z 8 GB RAM użyj `8192` – większe okno to większy KV cache w pamięci.
-Sprawdzenie: `ollama ps` (kolumna CONTEXT) albo `make check` (krok „Okno kontekstu”
-ostrzega, gdy okno < 8192).
+Sprawdzenie: `ollama ps` (kolumna CONTEXT) albo `make check` (krok „Okno kontekstu” ostrzega, gdy okno < 8192).
 
 ## Szybki start
 
 ```bash
-make setup     # uv sync + utworzenie .env z .env.example
-make pull      # ollama pull modeli z .env (raz, kilka GB)
-make pull_w    # ollama pull modeli z .env dla systemu windows (raz, kilka GB)
-make up        # Qdrant w Dockerze (pomiń, jeśli QDRANT_URL=local:...)
-make check     # smoke test – wszystko powinno być ✅
-make ingest    # indeksuje data/ (przykładowe pliki w data/sample/)
-make ask Q="Dlaczego trzeba ustawić okno kontekstu w Ollamie?"
-make agent Q="Jaka jest różnica między chunkingiem fixed-size a recursive?"
-make eval      # recall@k i MRR na eval/golden_sample.jsonl
+make setup       # uv sync + utworzenie .env z .env.example
+make pull        # ollama pull modeli z .env (Windows: make pull_w)
+make up          # Qdrant w Dockerze (pomiń, jeśli QDRANT_URL=local:...)
+make check       # smoke test – wszystko powinno być ✅
+make ingest-rpg  # indeksuje 4 podręczniki z data/raw w kolekcjach rpg_structure i rpg_fixed
+make ask Q="Jaki zasięg i obrażenia ma czar Fireball w D&D 5e?" ARGS='--filter "system=D&D 5e"'
+make agent Q="Porównaj jak działa pancerz w D&D 5e oraz w systemie Mythras."
+make eval-rpg    # porównuje rpg_structure i rpg_fixed na eval/golden_rpg.jsonl (source + section)
 ```
 
-Własne dokumenty (PDF/MD/TXT) wrzuć do `data/raw/` i uruchom `make ingest ARGS=--recreate`.
-`make ingest` indeksuje katalog `DATA_DIR` z `.env` (domyślnie `data/`); jednorazowo inny katalog:
-`make ingest DATA=data/raw`.
-Przydatne flagi: `make ask Q="..." ARGS="--show-context -k 8"`,
-`make ingest ARGS="--chunking fixed --collection docs_fixed"`, `uv run rag --help`.
+Jeśli nie masz jeszcze pobranych PDF-ów w `data/raw/`, możesz przetestować pipeline na krótkich plikach przykładowych w `data/sample/`:
+```bash
+uv run rag ingest data/sample --collection sample --recreate
+uv run rag eval --golden eval/golden_sample.jsonl --collection sample
+```
 
-Przykładowy wynik `make ask Q="Czym jest chunking?"`:
+Przykładowy wynik `uv run rag ask "Jaki zasięg i obrażenia ma czar Fireball w D&D 5e?" --filter "system=D&D 5e"`:
 
 ```
-Chunking to proces dzielenia długich tekstów na mniejsze fragmenty (chunki), aby zmniejszyć obciążenie
-okna kontekstu i poprawić precyzję odpowiedzi. Domyślną strategią jest 'recursive', która dzieli tekst
-po akapitach, liniach i zdaniach, a następnie skleja małe kawałki do docelowej długości [2].
-Alternatywnie stosuje się 'fixed-size', tnący tekst na stałą liczbę znaków z nakładką (overlap) [5].
+Czar Fireball (Kula Ognia) w D&D 5e ma zasięg 150 stóp (150 feet) (PHB, s. 90). Cel w obszarze
+działania otrzymuje 8k6 obrażeń od ognia (fire damage) przy nieudanym rzucie obronnym na Zręczność
+(Dexterity saving throw) lub połowę tych obrażeń przy udanym rzucie (PHB, s. 90).
 
 Źródła cytowane:
-  [2] chunking.md › Recursive  (score 0.743)
-      „Chunking recursive próbuje dzielić tekst po naturalnych granicach: najpierw po akapitach, ...”
-  [5] chunking.md › Fixed-size  (score 0.657)
-      „Chunking fixed-size tnie tekst na kawałki o stałej liczbie znaków.”
-Pobrane (retrieved), niecytowane:
-  [1] chunking.md › Chunking  (score 0.853)
-  [3] chunking.md › Chunking po strukturze  (score 0.712)
-  [4] chunking.md › Po co dzielić dokumenty  (score 0.696)
-retrieval 0.13s · generacja 7.15s · structured output: prompt
+  [1] D&D 5e Player's Basic Rules › Chapter 11: Spells › Fireball (s. 90)  (score 0.812)
+      „A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one.”
+retrieval 0.14s · generacja 2.40s · structured output: native
 ```
 
-Znaczniki `[n]` w tekście wstawia model; listę źródeł i cytaty („…”) buduje kod z metadanych
-i treści chunków – model nie może wymyślić nazwy pliku ani cytatu. „Pobrane, niecytowane” to chunki,
-które retrieval znalazł, ale model ich nie użył (warto je oglądać przy debugowaniu retrievalu).
+Znaczniki `[n]` w tekście wstawia model, a `render_answer` zamienia je na czytelne odwołania `(PHB, s. 90)` z wydrukowanym numerem strony z podręcznika (`page_label`).
+
+## Podręczniki RPG i chunking strukturalny
+
+Plik `data/raw/manifest.json` definiuje metadane każdego podręcznika (`system`, `edition`, `role`, `language`, `label`, `short`, `doc_type: "rpg"`) oraz sumę `sha256`. Podczas `ingest`:
+
+1. **Normalizacja (`src/rag/normalize.py`)** – oprócz standardowych ligatur Unicode i sklejania wyrazów naprawia specyficzny defekt fontu w *SW5e Player's Handbook*, gdzie wszystkie ligatury (`fi`, `fl`, `ff`, `ffi`, `ffl`) są zastąpione znakiem `U+0000` (np. `modi\x00er` → `modifier`, `e\x00ect` → `effect`, `\x00ight` → `flight`, `mblu\x00ng` → `mbluffing`).
+2. **Struktura (`src/rag/rpg.py`)**:
+   - Czyta drzewo zakładek PDF (`read_outline`), a dla książek bez zakładek (SW5e) parsuje tekst spisu treści (`parse_toc`) z zachowaniem wcięć.
+   - Usuwa żywą paginę i wykrywa wydrukowany numer strony (`page_label`), korygując przesunięcie numeracji (np. w *Mythras 2E* wydrukowana strona = fizyczna − 1).
+   - Wykrywa zaklęcia (`spell`), moce (`power`) i stat blocki potworów (`monster`), tworząc dokładne `source_ids`, np. `DMBasicRulesv.pdf#monsters-a-z/owlbear`.
+   - W strategii `structure` każdy chunk otrzymuje nagłówek kontekstowy (`Książka › Rozdział › Sekcja › Wpis`) i limit `1.5 × CHUNK_SIZE`, dzięki czemu stat blocki i opisy zaklęć nie są cięte w połowie.
 
 ## Konfiguracja (.env)
 
-Wszystkie ustawienia są w `.env` (szablon z komentarzami: `.env.example`), wczytuje je
-`src/rag/config.py`. Najważniejsze:
+Wszystkie ustawienia są w `.env` (szablon: `.env.example`), wczytuje je `src/rag/config.py`:
 
 | Zmienna | Domyślnie | Opis |
 |---------|-----------|------|
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | Ollama, `qwen3.5:4b` | serwer zgodny z OpenAI |
-| `LLM_REASONING_EFFORT` | `none` | `none` wyłącza tryb thinking (patrz niżej) |
-| `EMBED_MODEL` | `qwen3-embedding:0.6b` | model embeddingów; `EMBED_BASE_URL` domyślnie = `LLM_BASE_URL` |
-| `DATA_DIR` | `data` | katalog z dokumentami dla `make ingest` |
-| `QDRANT_URL`, `COLLECTION` | `http://localhost:6333`, `docs` | vector store |
-| `TOP_K`, `CHUNKING`, `CHUNK_SIZE`, `CHUNK_OVERLAP` | 5, `recursive`, 800, 120 | parametry RAG (długości w znakach) |
+| `LLM_REASONING_EFFORT` | `none` | `none` wyłącza tryb thinking |
+| `EMBED_MODEL` | `qwen3-embedding:0.6b` | model embeddingów |
+| `DATA_DIR` | `data/raw` | katalog z podręcznikami dla `make ingest` |
+| `QDRANT_URL`, `COLLECTION` | `http://localhost:6333`, `rpg_structure` | vector store i domyślna kolekcja |
+| `TOP_K`, `CHUNKING`, `CHUNK_SIZE`, `CHUNK_OVERLAP` | 5, `structure`, 800, 120 | parametry RAG (`structure` / `recursive` / `fixed`) |
 | `LLM_TEMPERATURE` | `0` | temperatura generacji (0 = powtarzalne odpowiedzi i eval) |
-| `EMBED_QUERY_INSTRUCTION` | instrukcja dla qwen3-embedding | doklejana do zapytań (nie do dokumentów); dla innych modeli pusta |
+| `EMBED_QUERY_INSTRUCTION` | instrukcja RPG dla qwen3-embedding | doklejana do zapytań (nie do dokumentów) |
 | `STRUCTURED_OUTPUT` | `auto` | `auto` / `native` / `tool` / `prompt` |
-
-Zmienne z powłoki mają pierwszeństwo przed `.env`: `LLM_MODEL=qwen3.5:9b make eval ARGS=--generate`.
-
-**Thinking.** qwen3.5 domyślnie „myśli” przed odpowiedzią: „Ile to 17*23?” trwa z thinkingiem
-**26,8 s**, z `LLM_REASONING_EFFORT=none` **0,2 s**. W RAG odpowiedź jest w kontekście – zostaw `none`.
-
-**Zmiana modelu embeddingów** wymaga ponownego ingestu (`make ingest ARGS=--recreate`):
-wektory z różnych modeli są nieporównywalne. Program wykryje niezgodność i podpowie, co zrobić.
 
 ## Structured output: trzy tryby
 
 Odpowiedź RAG to JSON zgodny ze schematem `Answer` (`src/rag/generate.py`): `answer` (tekst ze
 znacznikami `[n]`) i `citations` (numery fragmentów; pusta lista = odmowa). `src/rag/structured.py`
-obsługuje trzy tryby:
-
-1. **native** – `response_format` z JSON Schema; serwer ogranicza dekodowanie, więc JSON zawsze jest poprawny.
-2. **prompt** – schemat w prompcie + walidacja Pydantic + jedno ponowienie z opisem błędu.
-3. **tool** – schemat jako parametry narzędzia `submit_answer` (tylko jawnie: `STRUCTURED_OUTPUT=tool`).
-
-`auto` (domyślnie) próbuje native, a gdy serwer go nie obsługuje – prompt. Wykryty tryb trafia do
-`.cache/structured_output.json` (reset: `make reset-cache`; `make check` wykrywa go zawsze od nowa).
-Na Macu Ollama uruchamia qwen3.5 runnerem **MLX**, który (Ollama 0.40.10) zwraca na `response_format`
-błąd `501` – stąd linia `structured output: native niedostępny → prompt`. Na Windows/Linux (GGUF)
-i w Gemini native powinien działać; to może się zmienić w nowszych wersjach Ollamy. Małe modele
-zwracają czasem `"citations": "[2], [3]"` – walidator `Answer.repair_citations` naprawia to przed
-walidacją. Szczegóły każdej próby: `uv run rag -v ask "..."`.
+obsługuje trzy tryby: **native** (`response_format`), **prompt** (schemat w prompcie + walidacja Pydantic)
+oraz **tool** (`STRUCTURED_OUTPUT=tool`). Domyślny tryb `auto` zapisuje wykryty wariant w `.cache/structured_output.json`.
 
 ## Słabszy laptop: Gemini API
 
 Odkomentuj blok Gemini w `.env` (szablon w `.env.example`): klucz z
 [Google AI Studio](https://aistudio.google.com/apikey), `EMBED_MODEL=gemini-embedding-001`, pusta
-`EMBED_QUERY_INSTRUCTION`, potem `make ingest ARGS=--recreate`. Qdrant nadal działa lokalnie.
+`EMBED_QUERY_INSTRUCTION`, potem `make ingest-rpg`. Qdrant nadal działa lokalnie.
 
-**Prywatność:** lokalnie (Ollama + Qdrant) dane nie opuszczają komputera. W darmowym tierze API treść
-promptów może być czytana przez ludzi i używana do trenowania – **nie wysyłaj** danych osobowych,
-danych z pracy ani niczego objętego NDA. Klucz trzymaj tylko w `.env` (jest w `.gitignore`).
+## Ewaluacja i ręczna ocena odpowiedzi
 
-## Ewaluacja
-
-Bez pomiaru nie wiesz, czy zmiana coś poprawiła. Złoty zbiór to plik JSONL:
-
-```json
-{"id": "s1", "question": "Czym jest RAG?", "answer": "...", "source_ids": ["rag_wprowadzenie.md#Czym jest RAG"], "tags": ["easy"]}
-```
-
-`source_ids` to identyfikatory źródeł **niezależne od chunkingu**: `plik.pdf#p3` (strona),
-`plik.md#Nagłówek` (sekcja), `plik.txt`. Każdy chunk ma w metadanych listę `source_ids`,
-które obejmuje, więc metryki są porównywalne między strategiami chunkingu. Pusta lista oznacza
-pytanie spoza dokumentów (oczekujemy odmowy).
+Złoty zbiór `eval/golden_rpg.jsonl` zawiera pytania przekrojowe dla wszystkich czterech podręczników (zaklęcia, potwory, mechanika walki, moce SW5e oraz pytania spoza korpusu sprawdzające odmowę odpowiedzi). Każdy rekord posiada dokładne `source_ids` (poziom wpisu) oraz `section_ids` (poziom sekcji/rozdziału):
 
 ```bash
-make eval                                   # recall@1/3/5, MRR (sam retrieval, szybko)
-make eval ARGS=--generate                   # + poprawność odmów, trafność cytatów, czas odpowiedzi
-make eval ARGS="--golden eval/moj_zbior.jsonl"
+make eval-rpg                        # porównanie rpg_structure vs rpg_fixed (poziom source i section)
+make eval-rpg ARGS=--generate        # + ocena wygenerowanych odpowiedzi, odmów i cytowań
 ```
 
-Generacja działa z `temperature=0` (powtarzalność). Wyniki: tabela w terminalu oraz
-`eval/results/<czas>_<zbiór>_<kolekcja>[_<model>].json` i `.md`.
+### Ręczna ocena odpowiedzi (`rag review`)
 
-Kolumna `ctx` to średnia liczba znaków kontekstu w top-k. Porównując strategie chunkingu, patrz
-na recall razem z nią: większe chunki „łapią” więcej źródeł przy tym samym k, ale dają modelowi
-więcej tekstu (wolniej, więcej szumu). Uczciwe porównanie to podobny budżet znaków, nie to samo k.
+Po uruchomieniu ewaluacji z flagą `--generate` możesz przejrzeć i ręcznie ocenić odpowiedzi modelu w terminalu (poprawna / niepoprawna / poprawna odmowa / błędna odmowa):
+
+```bash
+uv run rag review eval/results/<plik_wynikow>.json
+uv run rag review eval/results/<plik_wynikow>.json --only-ungraded
+```
+
+Oceny są zapisywane bezpośrednio w pliku JSON (`human_label`, `human_score`, `human_note`) oraz podsumowywane metryką `human_acc`.
 
 ## Co dalej (TODO)
 
-W `src/rag/retrieve.py` są szkielety z opisem krok po kroku – po każdej zmianie uruchom `make eval`:
+W `src/rag/retrieve.py` znajdują się miejsca na dalsze rozszerzenia – po każdej zmianie uruchom `make eval-rpg`:
 
 | TODO | Gdzie | Idea |
 |------|-------|------|
-| `TODO(hybrid)` | `hybrid_search()`, `store.py` | dense + sparse BM25 (FastEmbed `Qdrant/bm25`), fuzja RRF w Qdrant Query API (`uv add fastembed`) |
+| `TODO(hybrid)` | `hybrid_search()`, `store.py` | dense + sparse BM25 (FastEmbed `Qdrant/bm25`), fuzja RRF – szczególnie skuteczna dla dokładnych nazw własnych zaklęć i potworów |
 | `TODO(reranking)` | `rerank()` | cross-encoder `BAAI/bge-reranker-v2-m3` na top-20 kandydatach |
-| `TODO(metadata-filtering)` | `build_filter()` | filtry po metadanych (`MatchAny`, zakresy, flaga `--filter`) |
-| `TODO(query-rewriting)` | `rewrite_query()` | przepisanie pytania / multi-query / HyDE |
+| `TODO(metadata-filtering)` | `build_filter()` | rozbudowa filtrów payloadu (`MatchAny`, zakresy stron) |
+| `TODO(query-rewriting)` | `rewrite_query()` | tłumaczenie polskich zapytań gracza na angielskie terminy z podręczników (cross-lingual query expansion) |
 
 ## Struktura repozytorium
 
 ```
-src/rag/   jeden moduł = jeden krok pipeline'u (opis w docstringu modułu; mapa w AGENTS.md)
-data/      sample/ – przykładowe dokumenty · raw/ – Twoje dokumenty (poza gitem)
-eval/      złote zbiory (JSONL) · results/ – wyniki (poza gitem)
-tests/     testy jednostkowe bez sieci (make test)
+src/rag/   jeden moduł = jeden krok pipeline'u (rpg.py – parser i chunking podręczników RPG)
+data/      sample/ – przykładowe pliki RPG (MD/TXT) · raw/ – 4 podręczniki PDF + manifest.json
+eval/      golden_rpg.jsonl i golden_sample.jsonl · results/ – wyniki i comparison.md
+tests/     testy jednostkowe bez sieci i bez PDF-ów (make test)
 scripts/   pomocnicze skrypty (pobieranie modeli)
 ```
 
@@ -260,16 +235,9 @@ scripts/   pomocnicze skrypty (pobieranie modeli)
 
 | Objaw | Przyczyna / rozwiązanie |
 |-------|-------------------------|
-| `❌ Ollama działa` | Ollama nie jest uruchomiona: `ollama serve` / aplikacja / `brew services start ollama`. Sprawdź `curl localhost:11434/api/version`. |
-| `❌ Modele pobrane` | `make pull` albo `ollama pull <model>`. Nazwa w `.env` musi zgadzać się z `ollama list`. |
-| `❌ Qdrant działa` | `make up` (czy Docker/OrbStack działa? `docker ps`). Alternatywa: `QDRANT_URL=local:./.qdrant`. |
-| `Storage folder ./.qdrant is already accessed` | tryb lokalny pozwala na jeden proces – zamknij inne `uv run rag ...`. |
-| `Kolekcja ... nie istnieje` | najpierw `make ingest`. |
-| `Kolekcja zindeksowana modelem X` / wymiar się nie zgadza | zmieniłeś `EMBED_MODEL` – `make ingest ARGS=--recreate`. |
-| odpowiedzi ignorują część kontekstu | za małe okno kontekstu – patrz [sekcja o oknie](#okno-kontekstu-ollamy--koniecznie-przeczytaj). |
-| bardzo wolne odpowiedzi (dziesiątki sekund) | thinking włączony – `LLM_REASONING_EFFORT=none`; albo model nie mieści się w RAM (swap) – weź mniejszy. |
-| `structured output: native niedostępny → prompt` | oczekiwane na Macu (MLX) – patrz [Structured output](#structured-output-trzy-tryby). |
-| po aktualizacji Ollamy wciąż używany stary tryb | `make reset-cache`. |
-| `żaden tryb structured output nie zadziałał` | model za słaby na JSON albo kontekst ucięty; spróbuj `qwen3.5:9b`, mniejszego `TOP_K` lub większego okna. |
-| PDF daje pusty tekst | skan bez warstwy tekstowej – potrzebny OCR (poza zakresem startera). |
-| `make: command not found` (Windows) | używaj `uv run rag <komenda>`. |
+| `❌ Ollama działa` | Ollama nie jest uruchomiona: `ollama serve` / aplikacja. |
+| `❌ Modele pobrane` | `make pull` (lub `make pull_w` na Windowsie). |
+| `❌ Qdrant działa` | `make up` albo ustaw `QDRANT_URL=local:./.qdrant`. |
+| `Kolekcja ... nie istnieje` | najpierw `make ingest-rpg` (lub `make ingest`). |
+| `UnicodeEncodeError` w PowerShellu | ustaw `$env:PYTHONUTF8='1';$env:PYTHONIOENCODING='utf-8'` przed uruchomieniem `uv run rag ...`. |
+| `make: command not found` (Windows) | używaj bezpośrednio `uv run rag <komenda>` (patrz `Makefile`). |

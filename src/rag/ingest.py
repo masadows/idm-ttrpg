@@ -6,6 +6,7 @@ sekcja dla Markdowna). Chunking dzieli bloki dalej, zachowując ich metadane.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import time
@@ -19,6 +20,7 @@ from rag.chunking import Block, Chunk, chunk_blocks
 from rag.config import Settings
 from rag.embeddings import embed_documents
 from rag.normalize import basic_clean, join_split_words, word_counts
+from rag.rpg import chunk_rpg, parse_toc, read_outline
 from rag.store import ensure_collection, get_client, upsert_chunks
 
 log = logging.getLogger(__name__)
@@ -68,12 +70,33 @@ def load_file(path: Path) -> list[Block]:
     return loaders[path.suffix.lower()](path)
 
 
+MANIFEST_NAME = "manifest.json"
+# Pola z manifestu kopiowane do payloadu każdego chunka (np. do metadata filtering).
+MANIFEST_FIELDS = ("doc_type", "system", "edition", "role", "language", "version")
+
+
+def load_manifest(directory: Path) -> dict[str, dict[str, Any]]:
+    """`manifest.json` z katalogu (nazwa pliku → wpis); pusty słownik, gdy brak manifestu."""
+    path = directory / MANIFEST_NAME
+    if not path.exists():
+        return {}
+    documents = json.loads(path.read_text(encoding="utf-8"))["documents"]
+    return {doc["file"]: doc for doc in documents}
+
+
 def discover_files(paths: list[Path]) -> list[Path]:
     """Rozwija katalogi do listy obsługiwanych plików (rekurencyjnie, posortowane)."""
     files: list[Path] = []
     for p in paths:
         if p.is_dir():
             files += sorted(f for f in p.rglob("*") if f.suffix.lower() in SUPPORTED_SUFFIXES)
+            for name in load_manifest(p):
+                if not (p / name).exists():
+                    log.warning(
+                        "Pomijam brakujący plik z manifestu: %s "
+                        "(wrzuć podręcznik do data/raw albo usuń wpis)",
+                        name,
+                    )
         elif p.exists():
             files.append(p)
         else:
@@ -89,6 +112,8 @@ def source_ids_for(metadata: dict[str, Any]) -> list[str]:
 
     Złoty zbiór (eval/) odwołuje się do nich, więc recall@k można porównywać między
     strategiami chunkingu. Format: `plik.pdf#p3`, `plik.md#Nazwa sekcji`, `plik.txt`.
+    Dla podręczników RPG (`doc_type=rpg`) identyfikatory buduje `rpg.py` z outline/TOC:
+    `plik.pdf#rozdzial/sekcja/wpisy`.
     """
     source = metadata["source"]
     if "page" in metadata:
@@ -109,19 +134,86 @@ def normalize_blocks(blocks: list[Block]) -> list[Block]:
     ]
 
 
+def document_metadata(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Metadane dokumentu z manifestu: (pola do payloadu, pełny wpis manifestu)."""
+    entry = load_manifest(path.parent).get(path.name, {})
+    meta: dict[str, Any] = {"source": path.name}
+    meta |= {k: entry[k] for k in MANIFEST_FIELDS if k in entry}
+    if "label" in entry:
+        meta["doc_label"] = entry["label"]
+    if "short" in entry:
+        meta["short_label"] = entry["short"]
+    return meta, entry
+
+
+def load_document(path: Path, entry: dict[str, Any]) -> list[Block]:
+    """Bloki dokumentu; `text_file` z manifestu zastępuje PDF bez warstwy tekstowej."""
+    if text_file := entry.get("text_file"):
+        text = Path(text_file).read_text(encoding="utf-8")
+        return [Block(text, {"source": path.name, "page": 1})]
+    return load_file(path)
+
+
+def chunk_rpg_document(
+    path: Path,
+    raw_blocks: list[Block],
+    meta: dict[str, Any],
+    strategy: str,
+    settings: Settings,
+) -> list[Chunk]:
+    """Podręcznik RPG: najpierw outline/spis treści, potem normalizacja i chunking."""
+    outline = []
+    if path.suffix.lower() == ".pdf":
+        try:
+            outline = read_outline(path)
+        except Exception as err:  # noqa: BLE001 – uszkodzony outline nie może blokować ingestu
+            log.warning("%s: nie udało się odczytać outline (%s)", path.name, err)
+    if not outline:
+        outline = parse_toc(raw_blocks)
+    blocks = normalize_blocks(raw_blocks)
+    return chunk_rpg(
+        blocks,
+        meta,
+        strategy,
+        size=settings.chunk_size,
+        overlap=settings.chunk_overlap,
+        outline=outline,
+    )
+
+
 def build_chunks(paths: list[Path], settings: Settings, strategy: str | None = None) -> list[Chunk]:
     """Wczytuje pliki i zwraca chunki gotowe do embeddingu (bez wywołań sieciowych)."""
     strategy = strategy or settings.chunking
     chunks: list[Chunk] = []
     for path in discover_files(paths):
-        blocks = normalize_blocks(load_file(path))
-        for b in blocks:
-            b.metadata["source_ids"] = source_ids_for(b.metadata)
-        file_chunks = chunk_blocks(
-            blocks, strategy, size=settings.chunk_size, overlap=settings.chunk_overlap
-        )
+        meta, entry = document_metadata(path)
+        raw_blocks = load_document(path, entry)
+        if meta.get("doc_type") == "rpg":
+            file_chunks = chunk_rpg_document(path, raw_blocks, meta, strategy, settings)
+            blocks_count = len(raw_blocks)
+        else:
+            blocks = normalize_blocks(raw_blocks)
+            if strategy == "structure":
+                log.warning(
+                    "%s: chunking structure jest tylko dla podręczników RPG "
+                    "(doc_type=rpg w manifeście) – używam recursive",
+                    path.name,
+                )
+            for b in blocks:
+                b.metadata |= meta | {"source_ids": source_ids_for(b.metadata)}
+            file_chunks = chunk_blocks(
+                blocks,
+                "recursive" if strategy == "structure" else strategy,
+                size=settings.chunk_size,
+                overlap=settings.chunk_overlap,
+            )
+            blocks_count = len(blocks)
         log.info(
-            "%s: %d bloków → %d chunków (%s)", path.name, len(blocks), len(file_chunks), strategy
+            "%s: %d bloków → %d chunków (%s)",
+            path.name,
+            blocks_count,
+            len(file_chunks),
+            strategy,
         )
         chunks += file_chunks
     return chunks

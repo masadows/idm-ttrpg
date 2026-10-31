@@ -1,0 +1,52 @@
+{
+  "documents": [
+    {
+      "file": "PlayerDnDBasicRules.pdf",
+      "title": "Player's Basic Rules (Dungeons & Dragons 5e)",
+      "system": "D&D 5e",
+      "edition": "Basic Rules v0.2 (2014)",
+      "doc_type": "rpg",
+      "role": "player",
+      "language": "en",
+      "label": "D&D 5e – Player's Basic Rules",
+      "short": "PHB",
+      "sha256": "76bd7bca1700891ab68cba116669ce6691e76ad30e345bd299e76c9584f78914"
+    },
+    {
+      "file": "DMBasicRulesv.pdf",
+      "title": "Dungeon Master's Basic Rules (Dungeons & Dragons 5e)",
+      "system": "D&D 5e",
+      "edition": "Basic Rules v0.3 (2014)",
+      "doc_type": "rpg",
+      "role": "gm",
+      "language": "en",
+      "label": "D&D 5e – Dungeon Master's Basic Rules",
+      "short": "DMG",
+      "sha256": "920984ab3db209f1a740612680644abeb93ae6de10751b232b506801895bcfb9"
+    },
+    {
+      "file": "Mythras - 2E (v3.1).pdf",
+      "title": "Mythras, 2nd Edition (v3.1)",
+      "system": "Mythras",
+      "edition": "2E (v3.1)",
+      "doc_type": "rpg",
+      "role": "core",
+      "language": "en",
+      "label": "Mythras 2E",
+      "short": "Mythras",
+      "sha256": "2b49fd1c2587af47d761bb4ab9816b5e7b918495221df3f89df34f77bac14b39"
+    },
+    {
+      "file": "SW5e - Player's Handbook.pdf",
+      "title": "Star Wars 5e – Player's Handbook",
+      "system": "SW5e",
+      "edition": "Player's Handbook",
+      "doc_type": "rpg",
+      "role": "player",
+      "language": "en",
+      "label": "Star Wars 5e – Player's Handbook",
+      "short": "SW5e PHB",
+      "sha256": "65947cbd8ed6eff45ce520196c62b9ec01705fcb86586818c04330d9e2004e53"
+    }
+  ]
+}

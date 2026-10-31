@@ -1,11 +1,11 @@
 """Ewaluacja retrievalu (i opcjonalnie generacji) na złotym zbiorze.
 
 Format złotego zbioru (JSONL, jeden obiekt na linię):
-    {"id": "q1", "question": "...", "answer": "...", "source_ids": ["plik.md#Sekcja"],
-     "tags": ["easy"], "needs_review": false}
+    {"id": "q1", "question": "...", "answer": "...",
+     "source_ids": ["plik.pdf#rozdzial/sekcja/fireball"], "tags": ["easy"]}
 
-`source_ids` to identyfikatory źródeł niezależne od chunkingu (patrz `ingest.source_ids_for`).
-Pusta lista oznacza pytanie spoza dokumentów – oczekujemy, że model odmówi odpowiedzi.
+`source_ids` to identyfikatory źródeł niezależne od chunkingu (patrz `ingest.source_ids_for`
+oraz `rpg.py`). Pusta lista oznacza pytanie spoza dokumentów – oczekujemy, że model odmówi.
 
 Metryki retrievalu (liczone tylko dla pytań z niepustym `source_ids`):
 - recall@k: jaka część oczekiwanych źródeł pojawiła się w top-k chunkach,
@@ -33,6 +33,13 @@ from rag.config import Settings
 from rag.generate import answer_question
 from rag.retrieve import Hit, retrieve
 
+HUMAN_SCORES: dict[str, float] = {
+    "correct": 1.0,
+    "refusal_ok": 1.0,
+    "incorrect": 0.0,
+    "refusal_bad": 0.0,
+}
+
 
 @dataclass
 class GoldItem:
@@ -42,6 +49,7 @@ class GoldItem:
     source_ids: list[str]
     tags: list[str] = field(default_factory=list)
     needs_review: bool = False
+    section_ids: list[str] = field(default_factory=list)
 
 
 def load_golden(path: Path) -> list[GoldItem]:
@@ -70,6 +78,35 @@ def reciprocal_rank(retrieved: list[list[str]], relevant: list[str]) -> float:
     return 0.0
 
 
+def to_level(source_ids: list[str], level: str) -> list[str]:
+    """Sprowadza identyfikatory do wybranej granulacji.
+
+    `level="section"`: `plik.pdf#rozdzial/sekcja/fireball` → `plik.pdf#rozdzial/sekcja`.
+    Przydatne przy porównaniu chunkingu: duży chunk fixed-size „zahacza” o kilka wpisów naraz,
+    co na poziomie wpisów zawyża jego recall.
+    """
+    if level == "source":
+        return list(dict.fromkeys(source_ids))
+
+    def collapse(source_id: str) -> str:
+        source, sep, path = source_id.partition("#")
+        if not sep or "/" not in path:
+            return source_id
+        return f"{source}#{path.rsplit('/', 1)[0]}"
+
+    return list(dict.fromkeys(collapse(source_id) for source_id in source_ids))
+
+
+def apply_human_grades(results: dict[str, Any]) -> dict[str, Any]:
+    """Przelicza średnią `human_acc` w summary na podstawie ręcznych ocen w wierszach."""
+    rows = results.get("rows", [])
+    scored = [HUMAN_SCORES[r["human_label"]] for r in rows if r.get("human_label") in HUMAN_SCORES]
+    results.setdefault("summary", {})["human_acc"] = (
+        round(sum(scored) / len(scored), 4) if scored else None
+    )
+    return results
+
+
 # --------------------------------------------------------------------------- przebieg
 
 
@@ -79,18 +116,44 @@ def evaluate(
     ks: tuple[int, ...] = (1, 3, 5),
     generate: bool = False,
     collection: str | None = None,
+    level: str = "source",
+    filters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Liczy metryki dla całego złotego zbioru. Zwraca słownik z wynikami per pytanie i średnimi."""
+    """Liczy metryki dla całego złotego zbioru. Zwraca słownik z wynikami per pytanie i średnimi.
+
+    Args:
+        level: "source" – identyfikatory jak w złotym zbiorze (np. wpis `.../fireball`);
+            "section" – porównanie na poziomie sekcji: używamy `section_id` z chunka
+            i opcjonalnego pola `section_ids` w złotym zbiorze, a `to_level` jest fallbackiem.
+    """
     max_k = max(ks)
     rows: list[dict[str, Any]] = []
+
+    def gold_ids(item: GoldItem) -> list[str]:
+        if level == "section" and item.section_ids:
+            return list(dict.fromkeys(item.section_ids))
+        return to_level(item.source_ids, level)
+
+    def hit_ids(hit: Hit) -> list[str]:
+        if level == "section" and hit.metadata.get("section_id"):
+            return [str(hit.metadata["section_id"])]
+        return to_level(hit.source_ids, level)
+
     for item in items:
         row: dict[str, Any] = {"id": item.id, "question": item.question, "tags": item.tags}
-        hits: list[Hit] = retrieve(item.question, settings, k=max_k, collection=collection)
+        hits: list[Hit] = retrieve(
+            item.question, settings, k=max_k, collection=collection, filters=filters
+        )
         if generate:
             result = answer_question(
-                item.question, settings, k=settings.top_k, collection=collection
+                item.question,
+                settings,
+                k=settings.top_k,
+                collection=collection,
+                filters=filters,
             )
-            cited = {sid for h in result.cited_hits() for sid in h.source_ids}
+            cited = {sid for h in result.cited_hits() for sid in hit_ids(h)}
+            gold = set(gold_ids(item))
             row |= {
                 "answer": result.answer.answer,
                 "citations": result.cited_numbers,
@@ -98,16 +161,17 @@ def evaluate(
                 "structured_mode": result.mode,
                 # Odmowa poprawna, gdy pytanie jest spoza dokumentów (pusty source_ids).
                 "refusal_ok": result.answered_from_context == bool(item.source_ids),
-                "citation_hit": bool(cited & set(item.source_ids)) if item.source_ids else None,
+                "citation_hit": bool(cited & gold) if item.source_ids else None,
                 # Czy odpowiedź ma znaczniki [n] w tekście (tylko dla pytań z odpowiedzią).
                 "inline_cited": result.has_inline_citations if item.source_ids else None,
             }
         row["ctx_chars"] = sum(len(h.text) for h in hits[: settings.top_k])
         if item.source_ids:
-            retrieved = [h.source_ids for h in hits]
+            retrieved = [hit_ids(h) for h in hits]
+            relevant = gold_ids(item)
             for k in ks:
-                row[f"recall@{k}"] = recall_at_k(retrieved, item.source_ids, k)
-            row["mrr"] = reciprocal_rank(retrieved, item.source_ids)
+                row[f"recall@{k}"] = recall_at_k(retrieved, relevant, k)
+            row["mrr"] = reciprocal_rank(retrieved, relevant)
         rows.append(row)
     return {"rows": rows, "summary": summarize(rows, ks)}
 

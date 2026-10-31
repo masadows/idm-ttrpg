@@ -36,10 +36,17 @@ def cmd_ingest(args: argparse.Namespace) -> None:
 
 
 def cmd_ask(args: argparse.Namespace) -> None:
-    from rag.generate import answer_question, best_quote
+    from rag.config import parse_filters
+    from rag.generate import answer_question, best_quote, render_answer
 
-    result = answer_question(args.question, get_settings(), k=args.k, collection=args.collection)
-    console.print(Markdown(result.answer.answer))
+    result = answer_question(
+        args.question,
+        get_settings(),
+        k=args.k,
+        collection=args.collection,
+        filters=parse_filters(",".join(args.filter)),
+    )
+    console.print(Markdown(render_answer(result)))
     if result.answered_from_context:
         console.print("\n[bold]Źródła cytowane:[/]")
         for n in result.cited_numbers:
@@ -94,6 +101,7 @@ SHORT_HEADERS = {
     "citation_hit": "cyt.",
     "inline_cited": "[n]",
     "latency_s": "t[s]",
+    "human_acc": "ręczna",
 }
 
 
@@ -102,7 +110,9 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
     settings = get_settings()
     items = load_golden(Path(args.golden))
-    results = evaluate(items, settings, generate=args.generate, collection=args.collection)
+    results = evaluate(
+        items, settings, generate=args.generate, collection=args.collection, level=args.level
+    )
     summary = results["summary"]
     # Kolumny = metryki policzone w tym przebiegu (bez --generate nie ma metryk odpowiedzi).
     metric_cols = [c for c in summary if c != "questions" and summary[c] is not None]
@@ -137,10 +147,116 @@ def cmd_eval(args: argparse.Namespace) -> None:
     console.print(f"[dim]{escape(legend)}[/]")
 
     label = f"{Path(args.golden).stem}_{args.collection or settings.collection}"
+    if args.level != "source":
+        label += f"_{args.level}"
     if args.generate:
         label += f"_{settings.llm_model.replace(':', '-').replace('/', '-')}"
+    results |= {
+        "golden": args.golden,
+        "collection": args.collection or settings.collection,
+        "level": args.level,
+        "generate": args.generate,
+    }
     path = save_results(results, settings, Path("eval/results"), label)
     console.print(f"[dim]Zapisano: {path}[/]")
+
+
+def cmd_review(args: argparse.Namespace) -> None:
+    import json
+    from rich.panel import Panel
+    from rag.eval import HUMAN_SCORES, apply_human_grades, load_golden
+
+    path = Path(args.result_file)
+    if not path.exists():
+        raise ValueError(f"Plik nie istnieje: {path}")
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    rows = data.get("rows", [])
+    if not rows or "answer" not in rows[0]:
+        raise ValueError(
+            "Ten plik wyników nie zawiera wygenerowanych odpowiedzi. "
+            "Uruchom najpierw: uv run rag eval --generate"
+        )
+
+    golden_path = Path(args.golden or data.get("golden", "eval/golden_rpg.jsonl"))
+    gold_by_id = (
+        {item.id: item for item in load_golden(golden_path)} if golden_path.exists() else {}
+    )
+
+    choices = {
+        "y": ("correct", "poprawna"),
+        "1": ("correct", "poprawna"),
+        "n": ("incorrect", "niepoprawna"),
+        "0": ("incorrect", "niepoprawna"),
+        "r": ("refusal_ok", "poprawna odmowa"),
+        "b": ("refusal_bad", "błędna odmowa / halucynacja"),
+    }
+
+    console.print(
+        f"[bold]Ręczna ocena:[/] {path.name} ({len(rows)} pytań)\n"
+        "[dim][y/1] poprawna · [n/0] niepoprawna · [r] poprawna odmowa · "
+        "[b] błędna odmowa · [Enter/s] pomiń · [q] zapisz i wyjdź[/]\n"
+    )
+
+    for idx, row in enumerate(rows, start=1):
+        if args.only_ungraded and row.get("human_label"):
+            continue
+
+        gold = gold_by_id.get(row["id"])
+        expected_refusal = bool(gold and not gold.source_ids)
+        gold_answer = gold.answer if gold else "(brak wzorca)"
+        gold_sources = (
+            ", ".join(gold.source_ids) if (gold and gold.source_ids) else "BRAK (oczekiwana odmowa)"
+        )
+
+        body = (
+            f"[bold]Pytanie:[/] {escape(row['question'])}\n"
+            f"[bold]Wzorzec:[/] [green]{escape(gold_answer)}[/]\n"
+            f"[bold]Oczekiwane źródła:[/] [dim]{escape(gold_sources)}[/]\n\n"
+            f"[bold]Odpowiedź modelu:[/]\n{escape(row.get('answer') or '(pusta)')}\n\n"
+            f"[dim]Cytowania: {row.get('citations', [])} · "
+            f"auto refusal_ok={row.get('refusal_ok')} · "
+            f"citation_hit={row.get('citation_hit')}[/]"
+        )
+        current = row.get("human_label")
+        title = f"[{idx}/{len(rows)}] {row['id']}"
+        if expected_refusal:
+            title += " (pytanie spoza korpusu)"
+        if current:
+            title += f" · obecna ocena: {current}"
+
+        console.print(Panel(body, title=title, border_style="cyan"))
+
+        while True:
+            raw = console.input("[bold]Ocena [y/n/r/b/s/q]: [/]").strip().lower()
+            if raw in ("", "s"):
+                break
+            if raw == "q":
+                apply_human_grades(data)
+                path.write_text(
+                    json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                )
+                console.print(f"[green]Zapisano dotychczasowe oceny w {path}[/]")
+                return
+            if raw in choices:
+                label, desc = choices[raw]
+                row["human_label"] = label
+                row["human_score"] = HUMAN_SCORES[label]
+                note = console.input("[dim]Notatka (opcjonalnie, Enter pomija): [/]").strip()
+                if note:
+                    row["human_note"] = note
+                console.print(f"  → zapisano: [bold]{desc}[/]\n")
+                break
+            console.print("[yellow]Wpisz y, n, r, b, s lub q.[/]")
+
+    apply_human_grades(data)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    acc = data["summary"].get("human_acc")
+    scored_count = sum(1 for r in rows if r.get("human_label") in HUMAN_SCORES)
+    console.print(
+        f"✅ Zapisano oceny ({scored_count}/{len(rows)}) w [bold]{path}[/] · "
+        f"human_acc = [bold]{f'{acc:.1%}' if acc is not None else 'brak'}[/]"
+    )
 
 
 def cmd_check(_: argparse.Namespace) -> None:
@@ -160,7 +276,9 @@ def cmd_reset_cache(_: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="rag", description="Starter RAG – kurs IDM (WEiTI PW)")
+    parser = argparse.ArgumentParser(
+        prog="rag", description="RAG dla podręczników RPG – D&D 5e, Mythras, SW5e"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="więcej logów")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -176,15 +294,38 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-k", type=int, help="liczba chunków w kontekście (domyślnie TOP_K)")
     p.add_argument("--collection")
     p.add_argument("--show-context", action="store_true", help="pokaż pełny tekst chunków")
+    p.add_argument(
+        "--filter",
+        action="append",
+        default=[],
+        metavar="POLE=WARTOŚĆ",
+        help="filtr metadanych, np. --filter system=D&D 5e (można powtarzać)",
+    )
     p.set_defaults(func=cmd_ask)
+
+    p = sub.add_parser("review", help="ręczna ocena wygenerowanych odpowiedzi w pliku wyników JSON")
+    p.add_argument("result_file", help="ścieżka do pliku eval/results/*.json (z --generate)")
+    p.add_argument("--golden", help="opcjonalna ścieżka do złotego zbioru (domyślnie z pliku JSON)")
+    p.add_argument(
+        "--only-ungraded",
+        action="store_true",
+        help="pokazuj tylko pytania, które nie mają jeszcze ręcznej oceny",
+    )
+    p.set_defaults(func=cmd_review)
 
     p = sub.add_parser("agent", help="agent z narzędziem search_docs")
     p.add_argument("question", nargs="?")
     p.set_defaults(func=cmd_agent)
 
     p = sub.add_parser("eval", help="ewaluacja na złotym zbiorze")
-    p.add_argument("--golden", default="eval/golden_sample.jsonl")
+    p.add_argument("--golden", default="eval/golden_rpg.jsonl")
     p.add_argument("--generate", action="store_true", help="oceniaj też odpowiedzi (wolniej)")
+    p.add_argument(
+        "--level",
+        choices=("source", "section"),
+        default="source",
+        help="granulacja source_ids: jak w złotym zbiorze albo na poziomie sekcji",
+    )
     p.add_argument("--collection")
     p.set_defaults(func=cmd_eval)
 
@@ -207,6 +348,7 @@ def main(argv: list[str] | None = None) -> None:
     # informacja dydaktyczna. Szczegóły każdej próby: `rag -v ...` (DEBUG).
     logging.getLogger("rag.structured").setLevel(logging.DEBUG if args.verbose else logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
     try:
         args.func(args)
     except (RuntimeError, ValueError) as err:

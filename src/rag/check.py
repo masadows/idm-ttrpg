@@ -95,9 +95,9 @@ def check_embedding(settings: Settings) -> str:
 def check_rag(settings: Settings) -> str:
     """Mini-kolekcja z 3 chunkami → jedno pytanie RAG → sprzątanie."""
     texts = [
-        "Kot Filemon mieszka w Warszawie i lubi mleko.",
-        "Qdrant to baza wektorowa napisana w języku Rust.",
-        "Pociąg do Krakowa odjeżdża o 7:15 z Dworca Centralnego.",
+        "W Mythras testy umiejętności wykonuje się kością k100 (d100).",
+        "Kula ognia (fireball) w D&D 5e zadaje 8k6 obrażeń od ognia.",
+        "SW5e to konwersja zasad D&D 5e do uniwersum Gwiezdnych wojen.",
     ]
     chunks = [
         Chunk(
@@ -117,7 +117,10 @@ def check_rag(settings: Settings) -> str:
     upsert_chunks(client, CHECK_COLLECTION, chunks, vectors, settings.embed_model)
     try:
         result = answer_question(
-            "W jakim języku napisano Qdranta?", settings, k=2, collection=CHECK_COLLECTION
+            "Jakiej kości używa się w Mythras do testów umiejętności?",
+            settings,
+            k=2,
+            collection=CHECK_COLLECTION,
         )
     except Exception as err:
         raise CheckFailed(
@@ -126,7 +129,7 @@ def check_rag(settings: Settings) -> str:
         ) from err
     finally:
         client.delete_collection(CHECK_COLLECTION)
-    if "Qdrant" not in result.hits[0].text:
+    if "Mythras" not in result.hits[0].text:
         raise CheckFailed(
             "Retrieval zwrócił zły chunk na pierwszym miejscu", "Sprawdź EMBED_MODEL."
         )
@@ -152,7 +155,7 @@ def check_context_window(settings: Settings) -> str:
 def check_tool_call(settings: Settings) -> str:
     response = llm_client(settings).chat.completions.create(
         **chat_kwargs(settings),
-        messages=[{"role": "user", "content": "Wyszukaj w dokumentach informacje o urlopie."}],
+        messages=[{"role": "user", "content": "Wyszukaj w podręcznikach informacje o kuli ognia."}],
         tools=[SEARCH_DOCS_TOOL],
     )
     calls = response.choices[0].message.tool_calls or []
