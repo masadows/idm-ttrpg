@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import httpx
+import time
 from rich.console import Console
 
 from rag.agent import SEARCH_DOCS_TOOL
@@ -99,6 +100,9 @@ def check_rag(settings: Settings) -> str:
         "Kula ognia (fireball) w D&D 5e zadaje 8k6 obrażeń od ognia.",
         "SW5e to konwersja zasad D&D 5e do uniwersum Gwiezdnych wojen.",
     ]
+
+    timings = {}
+
     chunks = [
         Chunk(
             t,
@@ -112,23 +116,38 @@ def check_rag(settings: Settings) -> str:
         for i, t in enumerate(texts)
     ]
     client = get_client(settings.qdrant_url)
+    t0 = time.perf_counter()
     vectors = embed_documents(texts, settings)
+    timings["embed_documents"] = time.perf_counter() - t0
+    t0 = time.perf_counter()
     ensure_collection(client, CHECK_COLLECTION, dim=len(vectors[0]), recreate=True)
+    timings["ensure_collection"] = time.perf_counter() - t0
+    t0 = time.perf_counter()
     upsert_chunks(client, CHECK_COLLECTION, chunks, vectors, settings.embed_model)
+    timings["upsert_chunks"] = time.perf_counter() - t0
     try:
+        t0 = time.perf_counter()
         result = answer_question(
             "Jakiej kości używa się w Mythras do testów umiejętności?",
             settings,
             k=2,
             collection=CHECK_COLLECTION,
         )
+        timings["answer_question"] = time.perf_counter() - t0
     except Exception as err:
         raise CheckFailed(
             f"Zapytanie RAG nie powiodło się: {err}",
             f"Sprawdź LLM_MODEL={settings.llm_model} i LLM_BASE_URL={settings.llm_base_url}.",
         ) from err
     finally:
+        t0 = time.perf_counter()
         client.delete_collection(CHECK_COLLECTION)
+        timings["delete_collection"] = time.perf_counter() - t0
+
+    for name, elapsed in timings.items():
+        console.print(f"   [dim]{name}: {elapsed:.3f}s[/]")
+    console.print(f"   [dim]Retrieval: {result.retrieve_s:.3f}s[/]")
+    console.print(f"   [dim]Generation: {result.generate_s:.3f}s[/]")
     if "Mythras" not in result.hits[0].text:
         raise CheckFailed(
             "Retrieval zwrócił zły chunk na pierwszym miejscu", "Sprawdź EMBED_MODEL."
