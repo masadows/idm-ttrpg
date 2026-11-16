@@ -79,7 +79,10 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0,
+      "human_note": "Refusal spowodowany brakiem oczekiwanego fragmentu źródła wśród topk zwróconych źródeł"
     },
     {
       "id": "rpg2",
@@ -143,7 +146,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg3",
@@ -209,7 +214,10 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "incorrect",
+      "human_score": 0.0,
+      "human_note": "Model wymyślił sobie, że użytkownik pyta o inne nieistniejące zaklęcie. Dodatkowo nie podał pełnej odpowiedzi (promień zaklęcia fireball)."
     },
     {
       "id": "rpg4",
@@ -268,7 +276,10 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0,
+      "human_note": "Model dobrze odpowiedział, ale odwołał się również do podręczników innych systemów."
     },
     {
       "id": "rpg5",
@@ -323,7 +334,10 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0,
+      "human_note": "Model udzielił prawidłowej odpowiedzi, ale powołał się na nieoczekiwane źródło."
     },
     {
       "id": "rpg6",
@@ -382,7 +396,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg7",
@@ -438,7 +454,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.25
+      "mrr": 0.25,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg8",
@@ -498,7 +516,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg9",
@@ -555,7 +575,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg10",
@@ -612,7 +634,10 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0,
+      "human_note": "Model udzielił niepełnej odpowiedzi. Wśród dostępnych źródeł nie było właściwego."
     },
     {
       "id": "rpg11",
@@ -670,7 +695,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg12",
@@ -727,7 +754,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg13",
@@ -790,7 +819,10 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.2
+      "mrr": 0.2,
+      "human_label": "correct",
+      "human_score": 1.0,
+      "human_note": "Model udzielił prawidłowej odpowiedzi, bez powołania się na właściwe źródło."
     },
     {
       "id": "rpg14",
@@ -848,7 +880,10 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.3333333333333333
+      "mrr": 0.3333333333333333,
+      "human_label": "correct",
+      "human_score": 1.0,
+      "human_note": "Model udzielił prawidłowej odpowiedzi, bez powołania się na właściwe źródło."
     },
     {
       "id": "rpg15",
@@ -909,7 +944,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg16",
@@ -966,7 +1003,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.3333333333333333
+      "mrr": 0.3333333333333333,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg17",
@@ -1027,7 +1066,9 @@
       "recall@1": 0.0,
       "recall@3": 0.5,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg18",
@@ -1077,7 +1118,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 4000
+      "ctx_chars": 4000,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg19",
@@ -1128,7 +1171,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3999
+      "ctx_chars": 3999,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg20",
@@ -1185,7 +1230,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg21",
@@ -1240,7 +1287,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg22",
@@ -1292,7 +1341,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3998
+      "ctx_chars": 3998,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg23",
@@ -1348,7 +1399,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg24",
@@ -1404,7 +1457,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg25",
@@ -1461,7 +1516,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg26",
@@ -1516,7 +1573,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg27",
@@ -1571,7 +1630,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg28",
@@ -1627,7 +1688,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.5,
-      "mrr": 0.25
+      "mrr": 0.25,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg29",
@@ -1686,7 +1749,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.3333333333333333
+      "mrr": 0.3333333333333333,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg30",
@@ -1741,7 +1806,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.2
+      "mrr": 0.2,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg31",
@@ -1796,7 +1863,10 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0,
+      "human_note": "dobrze"
     },
     {
       "id": "rpg32",
@@ -1850,7 +1920,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3997
+      "ctx_chars": 3997,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg33",
@@ -1906,7 +1978,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg34",
@@ -1965,7 +2039,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg35",
@@ -2020,7 +2096,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg36",
@@ -2073,7 +2151,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg37",
@@ -2128,7 +2208,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg38",
@@ -2186,7 +2268,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg39",
@@ -2241,7 +2325,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg40",
@@ -2297,7 +2383,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg41",
@@ -2354,7 +2442,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg42",
@@ -2414,7 +2504,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg43",
@@ -2472,7 +2564,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg44",
@@ -2532,7 +2626,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg45",
@@ -2583,7 +2679,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 4000
+      "ctx_chars": 4000,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg46",
@@ -2640,7 +2738,10 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.2
+      "mrr": 0.2,
+      "human_label": "incorrect",
+      "human_score": 0.0,
+      "human_note": "Niepełna"
     },
     {
       "id": "rpg47",
@@ -2699,7 +2800,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg48",
@@ -2757,7 +2860,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg49",
@@ -2815,7 +2920,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg50",
@@ -2871,7 +2978,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.25
+      "mrr": 0.25,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg51",
@@ -2926,7 +3035,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg52",
@@ -2982,7 +3093,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg53",
@@ -3039,7 +3152,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg54",
@@ -3088,7 +3203,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3391
+      "ctx_chars": 3391,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg55",
@@ -3143,7 +3260,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg56",
@@ -3198,7 +3317,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg57",
@@ -3253,7 +3374,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg58",
@@ -3308,7 +3431,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg59",
@@ -3363,7 +3488,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg60",
@@ -3419,7 +3546,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg61",
@@ -3476,7 +3605,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg62",
@@ -3540,7 +3671,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg63",
@@ -3595,7 +3728,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg64",
@@ -3654,7 +3789,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg65",
@@ -3704,7 +3841,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3998
+      "ctx_chars": 3998,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg66",
@@ -3762,7 +3901,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg67",
@@ -3824,7 +3965,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg68",
@@ -3881,7 +4024,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg69",
@@ -3936,7 +4081,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg70",
@@ -3992,7 +4139,9 @@
       "refusal_ok": false,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3999
+      "ctx_chars": 3999,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg71",
@@ -4053,7 +4202,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg72",
@@ -4109,7 +4260,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg73",
@@ -4163,7 +4316,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg74",
@@ -4222,7 +4377,10 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0,
+      "human_note": "Odp poprawna"
     },
     {
       "id": "rpg75",
@@ -4273,7 +4431,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 4000
+      "ctx_chars": 4000,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg76",
@@ -4333,7 +4493,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.3333333333333333
+      "mrr": 0.3333333333333333,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg77",
@@ -4391,7 +4553,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg78",
@@ -4444,7 +4608,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg79",
@@ -4502,7 +4668,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg80",
@@ -4557,7 +4725,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3998
+      "ctx_chars": 3998,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg81",
@@ -4609,7 +4779,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3998
+      "ctx_chars": 3998,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg82",
@@ -4675,7 +4847,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg83",
@@ -4731,7 +4905,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg84",
@@ -4789,7 +4965,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg85",
@@ -4845,7 +5023,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg86",
@@ -4900,7 +5080,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg87",
@@ -4961,7 +5143,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg88",
@@ -5022,7 +5206,9 @@
       "recall@1": 0.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 0.5
+      "mrr": 0.5,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg89",
@@ -5078,7 +5264,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg90",
@@ -5133,7 +5321,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg91",
@@ -5196,7 +5386,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg92",
@@ -5258,7 +5450,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg93",
@@ -5307,7 +5501,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3999
+      "ctx_chars": 3999,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg94",
@@ -5369,7 +5565,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg95",
@@ -5426,7 +5624,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg96",
@@ -5484,7 +5684,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg97",
@@ -5539,7 +5741,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 1.0,
-      "mrr": 0.2
+      "mrr": 0.2,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg98",
@@ -5595,7 +5799,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg99",
@@ -5650,7 +5856,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg100",
@@ -5698,7 +5906,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3995
+      "ctx_chars": 3995,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg101",
@@ -5753,7 +5963,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg102",
@@ -5812,7 +6024,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg103",
@@ -5868,7 +6082,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg104",
@@ -5918,7 +6134,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3996
+      "ctx_chars": 3996,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg105",
@@ -5975,7 +6193,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg106",
@@ -6033,7 +6253,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg107",
@@ -6088,7 +6310,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg108",
@@ -6147,7 +6371,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg109",
@@ -6200,7 +6426,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg110",
@@ -6257,7 +6485,9 @@
       "refusal_ok": false,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 4000
+      "ctx_chars": 4000,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg111",
@@ -6312,7 +6542,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg112",
@@ -6367,7 +6599,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg113",
@@ -6431,7 +6665,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg114",
@@ -6488,7 +6724,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "refusal_bad",
+      "human_score": 0.0
     },
     {
       "id": "rpg115",
@@ -6552,7 +6790,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.5,
-      "mrr": 0.2
+      "mrr": 0.2,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg116",
@@ -6604,7 +6844,9 @@
       "refusal_ok": true,
       "citation_hit": null,
       "inline_cited": null,
-      "ctx_chars": 3999
+      "ctx_chars": 3999,
+      "human_label": "refusal_ok",
+      "human_score": 1.0
     },
     {
       "id": "rpg117",
@@ -6663,7 +6905,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg118",
@@ -6721,7 +6965,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "incorrect",
+      "human_score": 0.0
     },
     {
       "id": "rpg119",
@@ -6778,7 +7024,9 @@
       "recall@1": 1.0,
       "recall@3": 1.0,
       "recall@5": 1.0,
-      "mrr": 1.0
+      "mrr": 1.0,
+      "human_label": "correct",
+      "human_score": 1.0
     },
     {
       "id": "rpg120",
@@ -6835,7 +7083,9 @@
       "recall@1": 0.0,
       "recall@3": 0.0,
       "recall@5": 0.0,
-      "mrr": 0.0
+      "mrr": 0.0,
+      "human_label": "correct",
+      "human_score": 1.0
     }
   ],
   "summary": {
@@ -6848,7 +7098,8 @@
     "refusal_ok": 0.85,
     "citation_hit": 0.337,
     "inline_cited": 0.721,
-    "latency_s": 1.826
+    "latency_s": 1.826,
+    "human_acc": 0.575
   },
   "golden": "eval/golden_rpg.jsonl",
   "collection": "rpg_fixed",
