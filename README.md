@@ -123,6 +123,7 @@ make setup       # uv sync + utworzenie .env z .env.example
 make pull        # ollama pull modeli z .env (Windows: make pull_w)
 make up          # Qdrant w Dockerze (pomiń, jeśli QDRANT_URL=local:...)
 make check       # smoke test – wszystko powinno być ✅
+make rulebooks   # pobiera podręczniki RPG do data/raw
 make ingest-rpg  # indeksuje 4 podręczniki z data/raw w kolekcjach rpg_structure i rpg_fixed
 make ask Q="Jaki zasięg i obrażenia ma czar Fireball w D&D 5e?" ARGS='--filter "system=D&D 5e"'
 make agent Q="Porównaj jak działa pancerz w D&D 5e oraz w systemie Mythras."

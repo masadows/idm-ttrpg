@@ -30,6 +30,9 @@ down: ## zatrzymuje Qdranta (dane zostają w wolumenie)
 check: ## smoke test: Ollama, modele, Qdrant, embedding, RAG, tool calling
 	uv run rag check
 
+rulebooks: ## pobiera podręczniki RPG do data/raw
+	uv run ./scripts/fetch_data.py
+
 ingest: ## indeksuje dokumenty z DATA_DIR (.env) albo DATA=ścieżka
 	uv run rag ingest $(DATA)$(ARGS)
 

@@ -10,7 +10,8 @@
       "language": "en",
       "label": "D&D 5e – Player's Basic Rules",
       "short": "PHB",
-      "sha256": "76bd7bca1700891ab68cba116669ce6691e76ad30e345bd299e76c9584f78914"
+      "sha256": "76bd7bca1700891ab68cba116669ce6691e76ad30e345bd299e76c9584f78914",
+      "url": "https://media.wizards.com/2014/downloads/dnd/PlayerDnDBasicRules_v0.2_PrintFriendly.pdf"
     },
     {
       "file": "DMBasicRulesv.pdf",
@@ -22,7 +23,8 @@
       "language": "en",
       "label": "D&D 5e – Dungeon Master's Basic Rules",
       "short": "DMG",
-      "sha256": "920984ab3db209f1a740612680644abeb93ae6de10751b232b506801895bcfb9"
+      "sha256": "920984ab3db209f1a740612680644abeb93ae6de10751b232b506801895bcfb9",
+      "url": "https://media.wizards.com/2014/downloads/dnd/DMBasicRulesv.0.3_PrinterFriendly.pdf"
     },
     {
       "file": "Mythras - 2E (v3.1).pdf",
@@ -34,7 +36,8 @@
       "language": "en",
       "label": "Mythras 2E",
       "short": "Mythras",
-      "sha256": "2b49fd1c2587af47d761bb4ab9816b5e7b918495221df3f89df34f77bac14b39"
+      "sha256": "2b49fd1c2587af47d761bb4ab9816b5e7b918495221df3f89df34f77bac14b39",
+      "url": "https://mega.nz/folder/feJz0CDC#b8V7C2yrMCiXropTmJV5ig/folder/rGQRRQoa"
     },
     {
       "file": "SW5e - Player's Handbook.pdf",
@@ -46,7 +49,8 @@
       "language": "en",
       "label": "Star Wars 5e – Player's Handbook",
       "short": "SW5e PHB",
-      "sha256": "65947cbd8ed6eff45ce520196c62b9ec01705fcb86586818c04330d9e2004e53"
+      "sha256": "65947cbd8ed6eff45ce520196c62b9ec01705fcb86586818c04330d9e2004e53",
+      "url": "https://drive.google.com/file/d/1JINdHzbcb4kv5QrDnirHbZXV-ZEjIaEk/view"
     }
   ]
 }
