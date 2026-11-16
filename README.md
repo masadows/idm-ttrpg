@@ -210,6 +210,9 @@ uv run rag review eval/results/<plik_wynikow>.json --only-ungraded
 
 Oceny są zapisywane bezpośrednio w pliku JSON (`human_label`, `human_score`, `human_note`) oraz podsumowywane metryką `human_acc`.
 
+## Podsumowanie pomiaru bazowego E1
+[`eval/results/E1/E1_results.md`](eval/results/E1/E1_results.md).
+
 ## Co dalej (TODO)
 
 W `src/rag/retrieve.py` znajdują się miejsca na dalsze rozszerzenia – po każdej zmianie uruchom `make eval-rpg`:
@@ -241,3 +244,5 @@ scripts/   pomocnicze skrypty (pobieranie modeli)
 | `Kolekcja ... nie istnieje` | najpierw `make ingest-rpg` (lub `make ingest`). |
 | `UnicodeEncodeError` w PowerShellu | ustaw `$env:PYTHONUTF8='1';$env:PYTHONIOENCODING='utf-8'` przed uruchomieniem `uv run rag ...`. |
 | `make: command not found` (Windows) | używaj bezpośrednio `uv run rag <komenda>` (patrz `Makefile`). |
+
+
