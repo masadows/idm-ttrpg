@@ -12,6 +12,7 @@ data/raw/*
 eval/results/*
 !eval/results/.gitkeep
 !eval/results/evaluation.md
+!eval/results/E1
 .DS_Store
 # Notatki prowadzącego (nie dla studentów)
 instructor/

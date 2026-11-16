@@ -1,6 +1,7 @@
 import pytest
 
-from rag.eval import recall_at_k, reciprocal_rank, to_level
+from rag.eval import retrieved_sources, recall_at_k, reciprocal_rank, to_level
+from rag.retrieve import Hit
 
 
 def test_recall_at_k():
@@ -27,4 +28,29 @@ def test_to_level_keeps_page_and_top_level_ids():
     assert to_level(["x.pdf#p3", "x.pdf#chapter-1"], "section") == [
         "x.pdf#p3",
         "x.pdf#chapter-1",
+    ]
+
+
+def test_retrieved_sources_groups_source_ids_per_chunk():
+    hits = [
+        Hit(
+            text="Pierwszy chunk.",
+            score=0.8,
+            metadata={"source_ids": ["rules.md#combat", "rules.md#chapter"], "chunk_index": 3},
+        ),
+        Hit(
+            text="Drugi chunk.",
+            score=0.7,
+            metadata={"source_ids": ["rules.md#combat"], "chunk_index": 3},
+        ),
+        Hit(
+            text="Trzeci chunk.",
+            score=0.6,
+            metadata={"source_ids": ["rules.md#combat"], "chunk_index": 8},
+        ),
+    ]
+
+    assert retrieved_sources(hits) == [
+        {"source_ids": ["rules.md#combat", "rules.md#chapter"], "chunk_index": 3},
+        {"source_ids": ["rules.md#combat"], "chunk_index": 8},
     ]

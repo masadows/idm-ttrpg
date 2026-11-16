@@ -163,8 +163,10 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
 def cmd_review(args: argparse.Namespace) -> None:
     import json
+
     from rich.panel import Panel
-    from rag.eval import HUMAN_SCORES, apply_human_grades, load_golden
+
+    from rag.eval import HUMAN_SCORES, apply_human_grades, load_golden, gold_ids
 
     path = Path(args.result_file)
     if not path.exists():
@@ -192,21 +194,24 @@ def cmd_review(args: argparse.Namespace) -> None:
         "b": ("refusal_bad", "błędna odmowa / halucynacja"),
     }
 
+    legend = "[y/1] poprawna · [n/0] niepoprawna · [r] poprawna odmowa · [b] błędna odmowa · [Enter/s] pomiń · [q] zapisz i wyjdź"
     console.print(
-        f"[bold]Ręczna ocena:[/] {path.name} ({len(rows)} pytań)\n"
-        "[dim][y/1] poprawna · [n/0] niepoprawna · [r] poprawna odmowa · "
-        "[b] błędna odmowa · [Enter/s] pomiń · [q] zapisz i wyjdź[/]\n"
+        f"[bold]Ręczna ocena:[/] {escape(path.name)} ({len(rows)} pytań)\n"
+        f"[dim]{escape(legend)}[/]\n"
     )
+
+    level = data.get("level", "source")
 
     for idx, row in enumerate(rows, start=1):
         if args.only_ungraded and row.get("human_label"):
             continue
 
         gold = gold_by_id.get(row["id"])
-        expected_refusal = bool(gold and not gold.source_ids)
+        expected_ids = gold_ids(gold, level) if gold else []
+        expected_refusal = bool(gold and not expected_ids)
         gold_answer = gold.answer if gold else "(brak wzorca)"
         gold_sources = (
-            ", ".join(gold.source_ids) if (gold and gold.source_ids) else "BRAK (oczekiwana odmowa)"
+            ", ".join(expected_ids) if expected_ids else "BRAK (oczekiwana odmowa)"
         )
 
         body = (
@@ -218,8 +223,20 @@ def cmd_review(args: argparse.Namespace) -> None:
             f"auto refusal_ok={row.get('refusal_ok')} · "
             f"citation_hit={row.get('citation_hit')}[/]"
         )
+        sources = row.get("retrieved_sources", [])
+        if sources:
+            source_lines = ["[bold]Źródła z retrieval:[/]"]
+            cited_numbers = set(row.get("citations", []))
+            for number, source in enumerate(sources, start=1):
+                source_ids = ", ".join(source.get("source_ids", [])) or "brak source_ids"
+                source_line = (
+                    f"[{number}] {source_ids} (chunk_index={source.get('chunk_index', '?')})"
+                )
+                style = "bold" if number in cited_numbers else "dim"
+                source_lines.append(f"[{style}]{escape(source_line)}[/{style}]")
+            body += "\n\n" + "\n".join(source_lines)
         current = row.get("human_label")
-        title = f"[{idx}/{len(rows)}] {row['id']}"
+        title = escape(f"[{idx}/{len(rows)}] {row['id']}")
         if expected_refusal:
             title += " (pytanie spoza korpusu)"
         if current:
@@ -228,7 +245,7 @@ def cmd_review(args: argparse.Namespace) -> None:
         console.print(Panel(body, title=title, border_style="cyan"))
 
         while True:
-            raw = console.input("[bold]Ocena [y/n/r/b/s/q]: [/]").strip().lower()
+            raw = console.input(r"[bold]Ocena [y/n/r/b/s/q]: [/]").strip().lower()
             if raw in ("", "s"):
                 break
             if raw == "q":

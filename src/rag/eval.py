@@ -12,6 +12,7 @@ Metryki retrievalu (liczone tylko dla pytań z niepustym `source_ids`):
 - MRR (Mean Reciprocal Rank): średnia z 1/pozycja pierwszego trafnego chunka (0, gdy brak).
 - ctx_chars: ile znaków kontekstu trafia do modelu (top-k chunków) – przy porównywaniu
   strategii chunkingu recall@k ma sens tylko obok tego budżetu (większe chunki = wyższy recall).
+- retrieved_sources: źródła i indeksy chunków zwrócone przez retrieval, w kolejności trafności.
 
 Metryki generacji (`--generate`):
 - refusal_ok: model odpowiedział na pytanie z dokumentów / odmówił na pytanie spoza nich,
@@ -97,6 +98,27 @@ def to_level(source_ids: list[str], level: str) -> list[str]:
     return list(dict.fromkeys(collapse(source_id) for source_id in source_ids))
 
 
+def gold_ids(item: GoldItem, level: str = "source") -> list[str]:
+    """Zwraca oczekiwane identyfikatory źródeł dla danego pytania, w wybranej granulacji."""
+    if level == "section" and item.section_ids:
+        return list(dict.fromkeys(item.section_ids))
+    return to_level(item.source_ids, level)
+
+
+def retrieved_sources(hits: list[Hit]) -> list[dict[str, Any]]:
+    """Zwraca jeden wpis na chunk wraz z należącymi do niego `source_ids`."""
+    sources: list[dict[str, Any]] = []
+    seen: set[tuple[Any, Any]] = set()
+    for hit in hits:
+        chunk_index = hit.metadata.get("chunk_index")
+        source = hit.metadata.get("source")
+        key = (source, chunk_index)
+        if key not in seen:
+            seen.add(key)
+            sources.append({"source_ids": hit.source_ids, "chunk_index": chunk_index})
+    return sources
+
+
 def apply_human_grades(results: dict[str, Any]) -> dict[str, Any]:
     """Przelicza średnią `human_acc` w summary na podstawie ręcznych ocen w wierszach."""
     rows = results.get("rows", [])
@@ -129,11 +151,6 @@ def evaluate(
     max_k = max(ks)
     rows: list[dict[str, Any]] = []
 
-    def gold_ids(item: GoldItem) -> list[str]:
-        if level == "section" and item.section_ids:
-            return list(dict.fromkeys(item.section_ids))
-        return to_level(item.source_ids, level)
-
     def hit_ids(hit: Hit) -> list[str]:
         if level == "section" and hit.metadata.get("section_id"):
             return [str(hit.metadata["section_id"])]
@@ -144,6 +161,7 @@ def evaluate(
         hits: list[Hit] = retrieve(
             item.question, settings, k=max_k, collection=collection, filters=filters
         )
+        row["retrieved_sources"] = retrieved_sources(hits)
         if generate:
             result = answer_question(
                 item.question,
@@ -153,7 +171,7 @@ def evaluate(
                 filters=filters,
             )
             cited = {sid for h in result.cited_hits() for sid in hit_ids(h)}
-            gold = set(gold_ids(item))
+            gold = set(gold_ids(item, level))
             row |= {
                 "answer": result.answer.answer,
                 "citations": result.cited_numbers,
@@ -168,7 +186,7 @@ def evaluate(
         row["ctx_chars"] = sum(len(h.text) for h in hits[: settings.top_k])
         if item.source_ids:
             retrieved = [hit_ids(h) for h in hits]
-            relevant = gold_ids(item)
+            relevant = gold_ids(item, level)
             for k in ks:
                 row[f"recall@{k}"] = recall_at_k(retrieved, relevant, k)
             row["mrr"] = reciprocal_rank(retrieved, relevant)
