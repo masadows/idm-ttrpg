@@ -1,6 +1,13 @@
 import pytest
 
-from rag.eval import retrieved_sources, recall_at_k, reciprocal_rank, to_level
+from rag.eval import (
+    apply_human_grades,
+    recall_at_k,
+    reciprocal_rank,
+    retrieved_sources,
+    to_level,
+    to_markdown,
+)
 from rag.retrieve import Hit
 
 
@@ -54,3 +61,72 @@ def test_retrieved_sources_groups_source_ids_per_chunk():
         {"source_ids": ["rules.md#combat", "rules.md#chapter"], "chunk_index": 3},
         {"source_ids": ["rules.md#combat"], "chunk_index": 8},
     ]
+
+
+def test_apply_human_grades_adds_review_statistics():
+    results = {
+        "rows": [
+            {"human_label": "correct", "tags": ["dnd", "combat"]},
+            {"human_label": "refusal_ok", "tags": ["dnd"]},
+            {"human_label": "incorrect", "tags": ["combat"]},
+            {"tags": ["dnd"]},
+        ],
+        "summary": {},
+    }
+
+    apply_human_grades(results)
+
+    assert results["summary"]["human_acc"] == pytest.approx(0.6667)
+    review = results["summary"]["human_review"]
+    assert review["graded"] == 3
+    assert review["ungraded"] == 1
+    assert review["counts"] == {"correct": 1, "refusal_ok": 1, "incorrect": 1, "refusal_bad": 0}
+    assert review["percentages"]["correct"] == pytest.approx(1 / 3, abs=1e-4)
+    assert review["percentages"]["refusal_ok"] == pytest.approx(1 / 3, abs=1e-4)
+    assert review["percentages"]["incorrect"] == pytest.approx(1 / 3, abs=1e-4)
+    assert review["percentages"]["refusal_bad"] == 0.0
+    assert "human_acc" not in results["rows"][0]
+    assert review["by_tag"]["dnd"]["graded"] == 2
+    assert review["by_tag"]["dnd"]["ungraded"] == 1
+    assert review["by_tag"]["dnd"]["counts"] == {
+        "correct": 1,
+        "refusal_ok": 1,
+        "incorrect": 0,
+        "refusal_bad": 0,
+    }
+    assert review["by_tag"]["combat"]["counts"]["incorrect"] == 1
+    assert review["by_tag"]["combat"]["counts"]["correct"] == 0
+
+
+def test_markdown_human_acc_column_uses_human_score():
+    results = {
+        "rows": [{"id": "q1", "question": "Pytanie", "human_score": 1.0}],
+        "summary": {"questions": 1, "human_acc": 1.0},
+    }
+
+    markdown = to_markdown(results, "Wyniki")
+
+    assert "| id | pytanie | human_score |" in markdown
+    assert "human_acc" not in markdown
+    assert "| q1 | Pytanie | 1.00 |" in markdown
+
+
+def test_markdown_contains_manual_review_totals():
+    results = {
+        "rows": [],
+        "summary": {
+            "questions": 2,
+            "human_acc": 0.5,
+            "human_review": {
+                "graded": 2,
+                "ungraded": 0,
+                "human_acc": 0.5,
+                "counts": {"correct": 1, "refusal_ok": 0, "incorrect": 1, "refusal_bad": 0},
+                "by_tag": {},
+            },
+        },
+    }
+
+    markdown = to_markdown(results, "Wyniki")
+
+    assert "| **suma** | **2** | **0** | **1** | **1** | **0** | **0** | **0.50** |" in markdown

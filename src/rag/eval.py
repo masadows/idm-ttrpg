@@ -120,11 +120,50 @@ def retrieved_sources(hits: list[Hit]) -> list[dict[str, Any]]:
 
 
 def apply_human_grades(results: dict[str, Any]) -> dict[str, Any]:
-    """Przelicza średnią `human_acc` w summary na podstawie ręcznych ocen w wierszach."""
+    """Przelicza statystyki ręcznych ocen w `summary`."""
     rows = results.get("rows", [])
-    scored = [HUMAN_SCORES[r["human_label"]] for r in rows if r.get("human_label") in HUMAN_SCORES]
-    results.setdefault("summary", {})["human_acc"] = (
-        round(sum(scored) / len(scored), 4) if scored else None
+
+    def review_stats(group: list[dict[str, Any]]) -> dict[str, Any]:
+        labels = [r.get("human_label") for r in group]
+        counts = {label: labels.count(label) for label in HUMAN_SCORES}
+        graded = sum(counts.values())
+        return {
+            "graded": graded,
+            "ungraded": len(group) - graded,
+            "counts": counts,
+            "percentages": {
+                label: round(count / graded, 4) if graded else None
+                for label, count in counts.items()
+            },
+            "human_acc": (
+                round(
+                    sum(
+                        HUMAN_SCORES[r["human_label"]]
+                        for r in group
+                        if r.get("human_label") in HUMAN_SCORES
+                    )
+                    / graded,
+                    4,
+                )
+                if graded
+                else None
+            ),
+        }
+
+    by_tag: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        tags = row.get("tags") or ["bez_tagu"]
+        by_tag.setdefault(str(tags[0]), []).append(row)
+
+    overall = review_stats(rows)
+    results.setdefault("summary", {}).update(
+        {
+            "human_acc": overall["human_acc"],
+            "human_review": {
+                **overall,
+                "by_tag": {tag: review_stats(tag_rows) for tag, tag_rows in sorted(by_tag.items())},
+            },
+        }
     )
     return results
 
@@ -211,14 +250,47 @@ def summarize(rows: list[dict[str, Any]], ks: tuple[int, ...]) -> dict[str, Any]
 def to_markdown(results: dict[str, Any], title: str) -> str:
     """Tabela wyników w Markdownie (do wklejenia w raport / slajdy)."""
     rows, summary = results["rows"], results["summary"]
-    cols = [c for c in summary if c != "questions" and summary[c] is not None]
-    lines = [f"# {title}", "", "| id | pytanie | " + " | ".join(cols) + " |"]
+    cols = [
+        c
+        for c in summary
+        if c not in {"questions", "human_review"} and (summary[c] is not None or c == "human_acc")
+    ]
+    display_cols = ["human_score" if c == "human_acc" else c for c in cols]
+    lines = [f"# {title}", "", "| id | pytanie | " + " | ".join(display_cols) + " |"]
     lines.append("|" + "---|" * (len(cols) + 2))
     for r in rows:
-        values = " | ".join(format_cell(r.get(c)) for c in cols)
+        values = " | ".join(
+            format_cell(r.get("human_score") if c == "human_acc" else r.get(c)) for c in cols
+        )
         lines.append(f"| {r['id']} | {r['question']} | {values} |")
     means = " | ".join(f"**{format_cell(summary[c])}**" for c in cols)
     lines.append(f"| **średnia** | {summary['questions']} pytań | {means} |")
+    if review := summary.get("human_review"):
+        lines.extend(
+            [
+                "",
+                "## Oceny ręczne",
+                "",
+                f"- Ocenione: {review['graded']}/{review['graded'] + review['ungraded']}",
+                f"- Pominięte: {review['ungraded']}",
+                "",
+                "| pierwszy tag | ocenione | pominięte | poprawne | niepoprawne | poprawne odmowy | niepoprawne odmowy | human_score |",
+                "|---|---:|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for tag, stats in review.get("by_tag", {}).items():
+            lines.append(
+                f"| {tag} | {stats['graded']} | {stats['ungraded']} | "
+                f"{stats['counts']['correct']} | {stats['counts']['incorrect']} | "
+                f"{stats['counts']['refusal_ok']} | {stats['counts']['refusal_bad']} | "
+                f"{format_cell(stats['human_acc'])} |"
+            )
+        lines.append(
+            f"| **suma** | **{review['graded']}** | **{review['ungraded']}** | "
+            f"**{review['counts']['correct']}** | **{review['counts']['incorrect']}** | "
+            f"**{review['counts']['refusal_ok']}** | **{review['counts']['refusal_bad']}** | "
+            f"**{format_cell(review['human_acc'])}** |"
+        )
     return "\n".join(lines) + "\n"
 
 

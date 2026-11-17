@@ -209,7 +209,12 @@ uv run rag review eval/results/<plik_wynikow>.json
 uv run rag review eval/results/<plik_wynikow>.json --only-ungraded
 ```
 
-Oceny są zapisywane bezpośrednio w pliku JSON (`human_label`, `human_score`, `human_note`) oraz podsumowywane metryką `human_acc`.
+Oceny są zapisywane bezpośrednio w pliku JSON (`human_label`, `human_score`, `human_note`).
+`review` wyświetla i zapisuje w pliku JSON oraz odpowiadającym mu pliku `.md`
+(`summary.human_review`) liczbę ocenionych oraz pominiętych pytań, liczności i udziały etykiet
+(`correct`, `incorrect`, `refusal_ok`, `refusal_bad`) oraz metrykę `human_score`. To samo
+podsumowanie jest generowane osobno dla każdego tagu w polu `summary.human_review.by_tag`.
+Przy wielu tagach pytanie jest przypisywane wyłącznie do pierwszego tagu.
 
 ## Podsumowanie pomiaru bazowego E1
 [`eval/results/E1/E1_results.md`](eval/results/E1/E1_results.md).

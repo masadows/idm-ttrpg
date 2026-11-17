@@ -7099,7 +7099,111 @@
     "citation_hit": 0.337,
     "inline_cited": 0.721,
     "latency_s": 1.826,
-    "human_acc": 0.575
+    "human_acc": 0.575,
+    "human_review": {
+      "graded": 120,
+      "ungraded": 0,
+      "counts": {
+        "correct": 53,
+        "refusal_ok": 16,
+        "incorrect": 22,
+        "refusal_bad": 29
+      },
+      "percentages": {
+        "correct": 0.4417,
+        "refusal_ok": 0.1333,
+        "incorrect": 0.1833,
+        "refusal_bad": 0.2417
+      },
+      "human_acc": 0.575,
+      "by_tag": {
+        "complex": {
+          "graded": 20,
+          "ungraded": 0,
+          "counts": {
+            "correct": 6,
+            "refusal_ok": 0,
+            "incorrect": 8,
+            "refusal_bad": 6
+          },
+          "percentages": {
+            "correct": 0.3,
+            "refusal_ok": 0.0,
+            "incorrect": 0.4,
+            "refusal_bad": 0.3
+          },
+          "human_acc": 0.3
+        },
+        "easy": {
+          "graded": 48,
+          "ungraded": 0,
+          "counts": {
+            "correct": 30,
+            "refusal_ok": 0,
+            "incorrect": 3,
+            "refusal_bad": 15
+          },
+          "percentages": {
+            "correct": 0.625,
+            "refusal_ok": 0.0,
+            "incorrect": 0.0625,
+            "refusal_bad": 0.3125
+          },
+          "human_acc": 0.625
+        },
+        "medium": {
+          "graded": 33,
+          "ungraded": 0,
+          "counts": {
+            "correct": 15,
+            "refusal_ok": 0,
+            "incorrect": 11,
+            "refusal_bad": 7
+          },
+          "percentages": {
+            "correct": 0.4545,
+            "refusal_ok": 0.0,
+            "incorrect": 0.3333,
+            "refusal_bad": 0.2121
+          },
+          "human_acc": 0.4545
+        },
+        "multi": {
+          "graded": 3,
+          "ungraded": 0,
+          "counts": {
+            "correct": 2,
+            "refusal_ok": 0,
+            "incorrect": 0,
+            "refusal_bad": 1
+          },
+          "percentages": {
+            "correct": 0.6667,
+            "refusal_ok": 0.0,
+            "incorrect": 0.0,
+            "refusal_bad": 0.3333
+          },
+          "human_acc": 0.6667
+        },
+        "unanswerable": {
+          "graded": 16,
+          "ungraded": 0,
+          "counts": {
+            "correct": 0,
+            "refusal_ok": 16,
+            "incorrect": 0,
+            "refusal_bad": 0
+          },
+          "percentages": {
+            "correct": 0.0,
+            "refusal_ok": 1.0,
+            "incorrect": 0.0,
+            "refusal_bad": 0.0
+          },
+          "human_acc": 1.0
+        }
+      }
+    }
   },
   "golden": "eval/golden_rpg.jsonl",
   "collection": "rpg_fixed",

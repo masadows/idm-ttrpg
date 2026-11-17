@@ -166,7 +166,13 @@ def cmd_review(args: argparse.Namespace) -> None:
 
     from rich.panel import Panel
 
-    from rag.eval import HUMAN_SCORES, apply_human_grades, load_golden, gold_ids
+    from rag.eval import (
+        HUMAN_SCORES,
+        apply_human_grades,
+        gold_ids,
+        load_golden,
+        to_markdown,
+    )
 
     path = Path(args.result_file)
     if not path.exists():
@@ -194,6 +200,63 @@ def cmd_review(args: argparse.Namespace) -> None:
         "b": ("refusal_bad", "błędna odmowa / halucynacja"),
     }
 
+    def show_review_summary() -> None:
+        review = data["summary"]["human_review"]
+        descriptions = {
+            "correct": "poprawne",
+            "incorrect": "niepoprawne",
+            "refusal_ok": "poprawne odmowy",
+            "refusal_bad": "błędne odmowy",
+        }
+        parts = [
+            f"{descriptions[label]}: {review['counts'][label]} ({review['percentages'][label]:.1%})"
+            for label in descriptions
+            if review["counts"][label]
+        ]
+        acc = data["summary"].get("human_acc")
+        console.print(
+            f"[bold]Podsumowanie ocen:[/] {review['graded']}/{len(rows)} ocenionych · "
+            f"{review['ungraded']} pominiętych · "
+            f"human_score = {f'{acc:.1%}' if acc is not None else 'brak'}"
+        )
+        if parts:
+            console.print("[dim]" + " · ".join(parts) + "[/]")
+        by_tag = review.get("by_tag", {})
+        if by_tag:
+            table = Table(title="Oceny według tagów")
+            table.add_column("tag")
+            table.add_column("ocenione", justify="right")
+            table.add_column("pominięte", justify="right")
+            table.add_column("poprawne", justify="right")
+            table.add_column("niepoprawne", justify="right")
+            table.add_column("poprawne odmowy", justify="right")
+            table.add_column("niepoprawne odmowy", justify="right")
+            table.add_column("human_score", justify="right")
+            for tag, stats in by_tag.items():
+                acc = stats["human_acc"]
+                table.add_row(
+                    tag,
+                    str(stats["graded"]),
+                    str(stats["ungraded"]),
+                    str(stats["counts"]["correct"]),
+                    str(stats["counts"]["incorrect"]),
+                    str(stats["counts"]["refusal_ok"]),
+                    str(stats["counts"]["refusal_bad"]),
+                    f"{acc:.1%}" if acc is not None else "–",
+                )
+            console.print(table)
+
+    def save_review_outputs() -> None:
+        apply_human_grades(data)
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        md_path = path.with_suffix(".md")
+        title = path.stem
+        if md_path.exists():
+            first_line = md_path.read_text(encoding="utf-8").splitlines()
+            if first_line and first_line[0].startswith("# "):
+                title = first_line[0][2:]
+        md_path.write_text(to_markdown(data, title), encoding="utf-8")
+
     legend = "[y/1] poprawna · [n/0] niepoprawna · [r] poprawna odmowa · [b] błędna odmowa · [Enter/s] pomiń · [q] zapisz i wyjdź"
     console.print(
         f"[bold]Ręczna ocena:[/] {escape(path.name)} ({len(rows)} pytań)\n"
@@ -210,9 +273,7 @@ def cmd_review(args: argparse.Namespace) -> None:
         expected_ids = gold_ids(gold, level) if gold else []
         expected_refusal = bool(gold and not expected_ids)
         gold_answer = gold.answer if gold else "(brak wzorca)"
-        gold_sources = (
-            ", ".join(expected_ids) if expected_ids else "BRAK (oczekiwana odmowa)"
-        )
+        gold_sources = ", ".join(expected_ids) if expected_ids else "BRAK (oczekiwana odmowa)"
 
         body = (
             f"[bold]Pytanie:[/] {escape(row['question'])}\n"
@@ -249,11 +310,11 @@ def cmd_review(args: argparse.Namespace) -> None:
             if raw in ("", "s"):
                 break
             if raw == "q":
-                apply_human_grades(data)
-                path.write_text(
-                    json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                save_review_outputs()
+                console.print(
+                    f"[green]Zapisano dotychczasowe oceny w {path} i {path.with_suffix('.md')}[/]"
                 )
-                console.print(f"[green]Zapisano dotychczasowe oceny w {path}[/]")
+                show_review_summary()
                 return
             if raw in choices:
                 label, desc = choices[raw]
@@ -266,14 +327,9 @@ def cmd_review(args: argparse.Namespace) -> None:
                 break
             console.print("[yellow]Wpisz y, n, r, b, s lub q.[/]")
 
-    apply_human_grades(data)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    acc = data["summary"].get("human_acc")
-    scored_count = sum(1 for r in rows if r.get("human_label") in HUMAN_SCORES)
-    console.print(
-        f"✅ Zapisano oceny ({scored_count}/{len(rows)}) w [bold]{path}[/] · "
-        f"human_acc = [bold]{f'{acc:.1%}' if acc is not None else 'brak'}[/]"
-    )
+    save_review_outputs()
+    console.print(f"✅ Zapisano oceny w [bold]{path}[/] i [bold]{path.with_suffix('.md')}[/]")
+    show_review_summary()
 
 
 def cmd_check(_: argparse.Namespace) -> None:
